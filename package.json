@@ -1,5 +1,5 @@
 {
-    "name": "crud"
+    "name": "cruds"
   , "version": "0.0.1"
   , "private": true
   , "main": "lib/crud.js"

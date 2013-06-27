@@ -1,53 +1,126 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+<!DOCTYPE html>  <html> <head>   <title>crud.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               crud.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>This Module provides functions to 
+create, update, delete and get entities
+from mongodb.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>The module also support REST and websocket
+interfaces for crud.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>To set up the REST interface do the following:</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p><code>
+app.use '/rest/end/point', require('entity.js').getApp(<entityname>)
+</code></p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">MongoClient = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;mongodb&#39;</span><span class="p">).</span><span class="nx">MongoClient</span>
+<span class="nv">ObjectID = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;mongodb&#39;</span><span class="p">).</span><span class="nx">ObjectID</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Connect to the mongodb instance. Connecting here
+will cache or reuse the same connections throughout 
+the application</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">mdb = </span><span class="kc">null</span>
+<span class="nx">MongoClient</span><span class="p">.</span><span class="nx">connect</span> <span class="s">&quot;mongodb://localhost:27017/Entity&quot;</span><span class="p">,</span>  <span class="p">{</span> <span class="nx">native_parser</span><span class="o">:</span><span class="kc">true</span><span class="p">,</span> <span class="nv">auto_reconnect: </span><span class="kc">true</span> <span class="p">},</span> <span class="nf">(err, db) -&gt;</span>
+  <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+    <span class="nv">mdb = </span><span class="nx">db</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Create an entity</p>
 
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+<p>The function takes the following arguments
+entityName - string 
+entityValue - entity object
+callBack - function</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.create = </span><span class="nf">(entityName, entityValue, callBack) -&gt;</span>
+  <span class="nx">mdb</span><span class="p">.</span><span class="nx">collection</span> <span class="nx">entityName</span><span class="p">,</span> <span class="nf">(err, col) -&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+      <span class="nx">col</span><span class="p">.</span><span class="nx">save</span> <span class="nx">entityValue</span><span class="p">,</span> <span class="nx">callBack</span>
+    <span class="k">else</span>
+      <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">col</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Update an entity</p>
 
-    <title>Crud by ksnabb</title>
-  </head>
+<p>The function takes the following arguments: <br />
+entityName - string <br />
+entityValue - entity object <br />
+callBack - function  </p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.update = </span><span class="nf">(entityName, entityId, entityValue, callBack) -&gt;</span>
+  <span class="nx">mdb</span><span class="p">.</span><span class="nx">collection</span> <span class="nx">entityName</span><span class="p">,</span> <span class="nf">(err, col) -&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+      <span class="k">delete</span> <span class="nx">entityValue</span><span class="p">.</span><span class="nx">_id</span>
+      <span class="nx">col</span><span class="p">.</span><span class="nx">update</span> <span class="p">{</span><span class="s">&quot;_id&quot;</span><span class="o">:</span> <span class="k">new</span> <span class="nx">ObjectID</span><span class="p">(</span><span class="nx">entityId</span><span class="p">)},</span> <span class="nx">entityValue</span><span class="p">,</span> <span class="p">{</span><span class="nv">upsert: </span><span class="kc">true</span><span class="p">},</span> <span class="nf">(err, item) -&gt;</span>
+        <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">item</span>
+    <span class="k">else</span>
+      <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">col</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Query entities</p>
 
-  <body>
-    <header>
-      <div class="inner">
-        <h1>Crud</h1>
-        <h2>Easy create, read, update and delete entity interfacing for node.js</h2>
-        <a href="https://github.com/ksnabb/crud" class="button"><small>View project on</small>GitHub</a>
-      </div>
-    </header>
+<p>entityName - string <br />
+query - mongodb query <br />
+callBack - function</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.get = </span><span class="nf">(entityName, query, callBack) -&gt;</span>
+  <span class="nx">mdb</span><span class="p">.</span><span class="nx">collection</span> <span class="nx">entityName</span><span class="p">,</span> <span class="nf">(err, col) -&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+      <span class="nx">col</span><span class="p">.</span><span class="nx">find</span> <span class="nx">query</span><span class="p">,</span> <span class="nf">(err, cursor) -&gt;</span>
+        <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+          <span class="nx">cursor</span><span class="p">.</span><span class="nx">toArray</span> <span class="nf">(err, items) -&gt;</span>
+            <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">items</span>
+        <span class="k">else</span>
+          <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">cursor</span>
+    <span class="k">else</span>
+      <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">col</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>GET single item with the help of this function</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.getId = </span><span class="nf">(entityName, id, callBack) -&gt;</span>
+  <span class="nx">mdb</span><span class="p">.</span><span class="nx">collection</span> <span class="nx">entityName</span><span class="p">,</span> <span class="nf">(err, col) -&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+      <span class="nx">col</span><span class="p">.</span><span class="nx">findOne</span> <span class="p">{</span><span class="s">&quot;_id&quot;</span><span class="o">:</span> <span class="k">new</span> <span class="nx">ObjectID</span><span class="p">(</span><span class="nx">id</span><span class="p">)},</span> <span class="nf">(err, item) -&gt;</span>
+        <span class="k">if</span> <span class="o">!</span><span class="nx">item</span>
+          <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="p">{}</span>
+        <span class="k">else</span>
+          <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">item</span>
+    <span class="k">else</span>
+      <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">col</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>Delete Entity with id</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.delete = </span><span class="nf">(entityName, id, callBack) -&gt;</span>
+  <span class="nx">mdb</span><span class="p">.</span><span class="nx">collection</span> <span class="nx">entityName</span><span class="p">,</span> <span class="nf">(err, col) -&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+      <span class="nx">col</span><span class="p">.</span><span class="nx">remove</span> <span class="p">{</span><span class="s">&quot;_id&quot;</span><span class="o">:</span> <span class="k">new</span> <span class="nx">ObjectID</span><span class="p">(</span><span class="nx">id</span><span class="p">)},</span> <span class="nf">(err) -&gt;</span>
+        <span class="nx">callBack</span> <span class="nx">err</span>
+    <span class="k">else</span>
+      <span class="nx">callBack</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">col</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>The following module.export returns and app
+that provides the REST interface for an Entity</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.getApp = </span><span class="nf">(name) -&gt;</span>
+  <span class="nv">express = </span><span class="nx">require</span><span class="p">(</span><span class="s">&#39;express&#39;</span><span class="p">)</span>
+  <span class="nv">app = </span><span class="nx">express</span><span class="p">()</span>
+      
+  <span class="nv">getQuery = </span><span class="nf">(requestQuery) -&gt;</span>    
+    <span class="nv">query = </span><span class="p">{}</span>
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
-          <p>Easy CRUD with mongodb and node.js. Under development more documentation comming up soon.</p>
-        </section>
+    <span class="k">for</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="k">of</span> <span class="nx">requestQuery</span>
+      <span class="k">if</span> <span class="o">!</span><span class="nb">isNaN</span><span class="p">(</span><span class="nb">Number</span> <span class="nx">value</span><span class="p">)</span>
+        <span class="nx">query</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">Number</span> <span class="nx">value</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="nx">key</span> <span class="o">is</span> <span class="s">&#39;_id&#39;</span>
+        <span class="nx">query</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">ObjectID</span> <span class="nx">value</span>
+      <span class="k">else</span>
+        <span class="nx">query</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span>
+    
+    <span class="k">return</span> <span class="nx">query</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>Query items from root url
+by sending query parameters
+in the get request</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">app</span><span class="p">.</span><span class="nx">get</span> <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="nf">(req, res) -&gt;</span>
+      
+    <span class="nv">query = </span><span class="nx">getQuery</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span>
+    
+    <span class="nx">exports</span><span class="p">.</span><span class="nx">get</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">query</span><span class="p">,</span> <span class="nf">(err, items) -&gt;</span>
+      <span class="k">if</span> <span class="nx">err</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">400</span><span class="p">,</span> <span class="s">&quot;something went wrong&quot;</span>
+      <span class="k">else</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="nx">items</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>Get a single item by sending GET 
+request to root url</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">app</span><span class="p">.</span><span class="nx">get</span> <span class="s">&#39;/:id&#39;</span><span class="p">,</span> <span class="nf">(req, res) -&gt;</span>
+    <span class="nx">exports</span><span class="p">.</span><span class="nx">getId</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">),</span> <span class="nf">(err, item) -&gt;</span>
+      <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="nx">item</span>
+      <span class="k">else</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">400</span><span class="p">,</span> <span class="s">&#39;Something went wrong!&#39;</span>
+        </pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>Post to root to create one entity
+the JSON object of the entity is 
+sent in request body</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">app</span><span class="p">.</span><span class="nx">post</span> <span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="nf">(req, res) -&gt;</span>
 
-        <aside id="sidebar">
-          <a href="https://github.com/ksnabb/crud/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/ksnabb/crud/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
+    <span class="nx">exports</span><span class="p">.</span><span class="nx">create</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nf">(err, item) -&gt;</span>
+      <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="nx">item</span>
+      <span class="k">else</span> 
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">400</span><span class="p">,</span> <span class="s">&#39;Something went wrong!&#39;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>Delete item by sending http delete
+to the entity uri</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">app</span><span class="p">.</span><span class="nx">delete</span> <span class="s">&#39;/:id&#39;</span><span class="p">,</span> <span class="nf">(req, res) -&gt;</span>
+    <span class="nx">exports</span><span class="p">.</span><span class="nx">delete</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">),</span> <span class="nf">(err) -&gt;</span>
+      <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="p">{}</span>
+      <span class="k">else</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">400</span><span class="p">,</span> <span class="s">&quot;Something went wrong!&quot;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>To update send the new values in
+request body to the entity url</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">app</span><span class="p">.</span><span class="nx">put</span> <span class="s">&#39;/:id&#39;</span><span class="p">,</span> <span class="nf">(req, res) -&gt;</span>
 
-          <p class="repo-owner"><a href="https://github.com/ksnabb/crud"></a> is maintained by <a href="https://github.com/ksnabb">ksnabb</a>.</p>
-
-          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
-    </div>
-
+    <span class="nx">exports</span><span class="p">.</span><span class="nx">update</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">),</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span> <span class="nf">(err, item) -&gt;</span>
+      <span class="k">if</span> <span class="o">!</span><span class="nx">err</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="nx">item</span>
+      <span class="k">else</span> 
+        <span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">400</span><span class="p">,</span> <span class="s">&#39;Something went wrong!&#39;</span>
+    
+  <span class="nx">app</span>
   
-  </body>
-</html>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

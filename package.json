@@ -1,0 +1,16 @@
+{
+    "name": "crud"
+  , "version": "0.0.1"
+  , "private": true
+  , "main": "lib/crud.js"
+  , "dependencies": {
+      "express": "3.0.4"
+    , "mongodb": "*"
+  }
+  , "devDependencies": {
+      "coffee-script": "*"
+    , "mocha": "0.10.0"
+    , "should": "0.5.1"
+    , "docco": "*"
+  }
+}

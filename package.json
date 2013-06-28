@@ -15,6 +15,7 @@
   },
   "description": "Easy CRUD with mongodb and node.js. Under development more documentation comming up soon.",
   "directories": {
+    "lib": "lib",
     "doc": "docs",
     "test": "test"
   },

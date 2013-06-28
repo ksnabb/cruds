@@ -1,16 +1,35 @@
 {
-    "name": "cruds"
-  , "version": "0.0.1"
-  , "private": false
-  , "main": "lib/crud.js"
-  , "dependencies": {
-      "express": "3.0.4"
-    , "mongodb": "*"
-  }
-  , "devDependencies": {
-      "coffee-script": "*"
-    , "mocha": "0.10.0"
-    , "should": "0.5.1"
-    , "docco": "*"
-  }
+  "name": "cruds",
+  "version": "0.0.1",
+  "private": false,
+  "main": "lib/crud.js",
+  "dependencies": {
+    "express": "3.0.4",
+    "mongodb": "*"
+  },
+  "devDependencies": {
+    "coffee-script": "*",
+    "mocha": "0.10.0",
+    "should": "0.5.1",
+    "docco": "*"
+  },
+  "description": "Easy CRUD with mongodb and node.js. Under development more documentation comming up soon.",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ksnabb/crud.git"
+  },
+  "keywords": [
+    "crud",
+    "rest",
+    "websockets"
+  ],
+  "author": "Kristoffer Snabb",
+  "license": "MIT"
 }

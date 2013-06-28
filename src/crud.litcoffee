@@ -24,8 +24,8 @@ the application
         mdb = null
         mongoDbConnectionString = "mongodb://localhost:27017/Entity" if not mongoDbConnectionString
         MongoClient.connect mongoDbConnectionString,  { native_parser:true, auto_reconnect: true }, (err, db) ->
-        if !err
-            mdb = db
+            if !err
+                mdb = db
 
 Create an entity
 
@@ -36,10 +36,10 @@ callBack - function
 
         ex.create = (entityName, entityValue, callBack) ->
             mdb.collection entityName, (err, col) ->
-            if !err
-                col.save entityValue, callBack
-            else
-                callBack err, col
+                if !err
+                    col.save entityValue, callBack
+                else
+                    callBack err, col
 
 Update an entity
  
@@ -50,12 +50,12 @@ callBack - function
 
         ex.update = (entityName, entityId, entityValue, callBack) ->
             mdb.collection entityName, (err, col) ->
-            if !err
-                delete entityValue._id
-                col.update {"_id": new ObjectID(entityId)}, entityValue, {upsert: true}, (err, item) ->
-                callBack err, item
-            else
-                callBack err, col
+                if !err
+                    delete entityValue._id
+                    col.update {"_id": new ObjectID(entityId)}, entityValue, {upsert: true}, (err, item) ->
+                        callBack err, item
+                else
+                    callBack err, col
 
 Query entities
  
@@ -65,38 +65,38 @@ callBack - function
 
         ex.get = (entityName, query, callBack) ->
             mdb.collection entityName, (err, col) ->
-            if !err
-                col.find query, (err, cursor) ->
                 if !err
-                    cursor.toArray (err, items) ->
-                    callBack err, items
+                    col.find query, (err, cursor) ->
+                        if !err
+                            cursor.toArray (err, items) ->
+                                callBack err, items
+                        else
+                            callBack err, cursor
                 else
-                    callBack err, cursor
-            else
-                callBack err, col
+                    callBack err, col
 
 GET single item with the help of this function
 
         ex.getId = (entityName, id, callBack) ->
             mdb.collection entityName, (err, col) ->
-            if !err
-                col.findOne {"_id": new ObjectID(id)}, (err, item) ->
-                if !item
-                    callBack err, {}
+                if !err
+                    col.findOne {"_id": new ObjectID(id)}, (err, item) ->
+                        if !item
+                            callBack err, {}
+                        else
+                            callBack err, item
                 else
-                    callBack err, item
-            else
-                callBack err, col
+                    callBack err, col
 
 Delete Entity with id
     
         ex.delete = (entityName, id, callBack) ->
             mdb.collection entityName, (err, col) ->
-            if !err
-                col.remove {"_id": new ObjectID(id)}, (err) ->
-                callBack err
-            else
-                callBack err, col
+                if !err
+                    col.remove {"_id": new ObjectID(id)}, (err) ->
+                        callBack err
+                else
+                    callBack err, col
 
 
 The following module.export returns and app
@@ -137,7 +137,7 @@ Get a single item by sending GET
 request to root url
 
             app.get '/:id', (req, res) ->
-                exports.getId name, req.param('id'), (err, item) ->
+                ex.getId name, req.param('id'), (err, item) ->
                     if !err
                         res.send item
                     else
@@ -149,7 +149,7 @@ sent in request body
 
             app.post '/', (req, res) ->
 
-                exports.create name, req.body, (err, item) ->
+                ex.create name, req.body, (err, item) ->
                     if !err
                         res.send item
                     else 
@@ -159,7 +159,7 @@ Delete item by sending http delete
 to the entity uri
 
             app.delete '/:id', (req, res) ->
-                exports.delete name, req.param('id'), (err) ->
+                ex.delete name, req.param('id'), (err) ->
                     if !err
                         res.send {}
                     else
@@ -170,7 +170,7 @@ request body to the entity url
 
             app.put '/:id', (req, res) ->
 
-                exports.update name, req.param('id'), req.body, (err, item) ->
+                ex.update name, req.param('id'), req.body, (err, item) ->
                     if !err
                         res.send item
                     else 

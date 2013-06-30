@@ -9,8 +9,8 @@
   },
   "devDependencies": {
     "coffee-script": "*",
-    "mocha": "0.10.0",
-    "should": "0.5.1",
+    "mocha": "1.11.0",
+    "should": "1.2.2",
     "docco": "*"
   },
   "description": "Easy CRUD with mongodb and node.js. Under development more documentation comming up soon.",

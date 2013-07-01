@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>crud.litcoffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>crud.litcoffee</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>This Module provides functions to 
+create, update, delete and get entities
+from mongodb.</p>
+<p>The module also provides a RESTfull interfaces for crud.</p>
+<p>The interface is fully compatible with backbone.js models.</p>
+<p>To use the module just do require(&quot;crud&quot;)( mongodb connection string )</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>module.<span class="function"><span class="title">exports</span></span> = (mongoDbConnectionString) -&gt;
+
+    MongoClient = require(<span class="string">'mongodb'</span>).MongoClient
+    ObjectID = require(<span class="string">'mongodb'</span>).ObjectID</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Functions to return will be created in the &#39;ex&#39; variable</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex = {}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p><em>connect(callBack)</em> is a helper funtion to connect to
+mongodb and to cache the connection. Multiple cals to 
+connect will in this way not produce more connections
+then one call to connect. The callback function will
+receive the mongo database instance object.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    mdb = <span class="literal">null</span>
+    listeners = []
+    <span class="function"><span class="title">connect</span></span> = (callBack) -&gt;
+        <span class="keyword">if</span> mdb
+            callBack mdb
+            <span class="keyword">return</span>
+        <span class="keyword">else</span>
+            listeners.push callBack
+
+        mongoDbConnectionString = <span class="string">"mongodb://localhost:27017/Entity"</span> <span class="keyword">if</span> <span class="keyword">not</span> mongoDbConnectionString
+        MongoClient.connect mongoDbConnectionString,  { native_parser: <span class="literal">true</span>, auto_reconnect: <span class="literal">true</span> }, (err, db) -&gt;
+            <span class="keyword">if</span> !err
+                mdb = db
+
+            <span class="keyword">for</span> listener <span class="keyword">in</span> listeners
+                listener mdb</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h3">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h3>Create an entity</h3>
+<p>The function takes the following arguments</p>
+<p><em>entityName</em> - string<br><em>entityValue</em> - entity object<br><em>callBack</em> - function     </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">create</span></span> = (entityName, entityValue, callBack) -&gt;
+        connect (mdb) -&gt;
+            mdb.collection entityName, (err, col) -&gt;
+                <span class="keyword">if</span> !err
+                    col.save entityValue, callBack
+                <span class="keyword">else</span>
+                    callBack err, col</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h3">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <h3>Update an entity</h3>
+<p>The update will update the queried document with the 
+key value pairs that is given in entityValue leaving all
+non mentioned key value pairs untouched. This function
+does not in other words replace the queried documents.</p>
+<p>The function takes the following arguments:</p>
+<p><em>entityName</em> - The name of the collection to use<br><em>entityId</em> - The hexadecimal representation of a mongodb ObjectID<br><em>entityValue</em> - The part of the document that should be updated<br><em>callBack</em> - function that takes two arguments error if an error occured and count which is the amount of documents that was updated     </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">update</span></span> = (entityName, entityId, entityValue, callBack) -&gt;
+        connect (mdb) -&gt;
+            mdb.collection entityName, (err, col) -&gt;
+                <span class="keyword">if</span> !err
+                    <span class="keyword">delete</span> entityValue._id
+                    col.update {<span class="string">"_id"</span>: <span class="keyword">new</span> ObjectID(entityId)}, {$set: entityValue}, (err, count) -&gt;
+                        callBack err, count
+                <span class="keyword">else</span>
+                    callBack err, col</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h3">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h3>Query entities</h3>
+<p><em>entityName</em> - string<br><em>query</em> - mongodb query<br><em>callBack</em> - function</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">get</span></span> = (entityName, query, callBack) -&gt;
+        connect (mdb) -&gt;
+            mdb.collection entityName, (err, col) -&gt;
+                <span class="keyword">if</span> !err
+                    col.find query, (err, cursor) -&gt;
+                        <span class="keyword">if</span> !err
+                            cursor.toArray (err, items) -&gt;
+                                callBack err, items
+                        <span class="keyword">else</span>
+                            callBack err, cursor
+                <span class="keyword">else</span>
+                    callBack err, col</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>GET single item with the help of this function</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">getById</span></span> = (entityName, id, callBack) -&gt;
+        connect (mdb) -&gt;
+            mdb.collection entityName, (err, col) -&gt;
+                <span class="keyword">if</span> !err
+                    col.findOne {<span class="string">"_id"</span>: <span class="keyword">new</span> ObjectID(id)}, (err, item) -&gt;
+                        <span class="keyword">if</span> !item
+                            callBack err, {}
+                        <span class="keyword">else</span>
+                            callBack err, item
+                <span class="keyword">else</span>
+                    callBack err, col</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Delete Entity with id</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">delete</span></span> = (entityName, id, callBack) -&gt;
+        connect (mdb) -&gt;
+            mdb.collection entityName, (err, col) -&gt;
+                <span class="keyword">if</span> !err
+                    col.remove {<span class="string">"_id"</span>: <span class="keyword">new</span> ObjectID(id)}, (err) -&gt;
+                        callBack err
+                <span class="keyword">else</span>
+                    callBack err, col</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>The following module.export returns and app
+that provides the REST interface for an Entity</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">getApp</span></span> = (name) -&gt;
+        express = require(<span class="string">'express'</span>)
+        app = express()
+
+        <span class="function"><span class="title">getQuery</span></span> = (requestQuery) -&gt;
+
+            query = {}
+
+            <span class="keyword">for</span> key, value <span class="keyword">of</span> requestQuery
+                <span class="keyword">if</span> !isNaN(Number value)
+                    query[key] = Number value
+                <span class="keyword">else</span> <span class="keyword">if</span> key <span class="keyword">is</span> <span class="string">'_id'</span>
+                    query[key] = ObjectID value
+                <span class="keyword">else</span>
+                    query[key] = value
+
+            <span class="keyword">return</span> query</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Query items from root url
+by sending query parameters
+in the get request</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.get <span class="string">'/'</span>, (req, res) -&gt;
+
+            query = getQuery req.query
+
+            ex.get name, query, (err, items) -&gt;
+                <span class="keyword">if</span> err
+                    res.send <span class="number">400</span>, <span class="string">"something went wrong"</span>
+                <span class="keyword">else</span>
+                    res.send items</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Get a single item by sending GET 
+request to root url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.get <span class="string">'/:id'</span>, (req, res) -&gt;
+
+            ex.getId name, req.param(<span class="string">'id'</span>), (err, item) -&gt;
+                <span class="keyword">if</span> !err
+                    res.send item
+                <span class="keyword">else</span>
+                    res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Post to root to create one entity
+the JSON object of the entity is 
+sent in request body</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.post <span class="string">'/'</span>, (req, res) -&gt;
+
+            ex.create name, req.body, (err, item) -&gt;
+                <span class="keyword">if</span> !err
+                    res.send item
+                <span class="keyword">else</span> 
+                    res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Delete item by sending http delete
+to the entity uri</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.<span class="keyword">delete</span> <span class="string">'/:id'</span>, (req, res) -&gt;
+
+            ex.<span class="keyword">delete</span> name, req.param(<span class="string">'id'</span>), (err) -&gt;
+                <span class="keyword">if</span> !err
+                    res.send {}
+                <span class="keyword">else</span>
+                    res.send <span class="number">400</span>, <span class="string">"Something went wrong!"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>To update send the new values in
+request body to the entity url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.put <span class="string">'/:id'</span>, (req, res) -&gt;
+
+            ex.update name, req.param(<span class="string">'id'</span>), req.body, (err, item) -&gt;
+                <span class="keyword">if</span> !err
+                    res.send item
+                <span class="keyword">else</span> 
+                    res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span>
+
+        app
+
+    ex</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

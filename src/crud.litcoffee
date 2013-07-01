@@ -3,10 +3,11 @@ This Module provides functions to
 create, update, delete and get entities
 from mongodb.
 
-The module also support REST and websocket
-interfaces for crud.
+The module also provides a RESTfull interfaces for crud.
 
-To use the module just do require("crud")( mongo connection string )
+The interface is fully compatible with backbone.js models.
+
+To use the module just do require("crud")( mongodb connection string )
 
     module.exports = (mongoDbConnectionString) ->
     
@@ -17,36 +18,38 @@ Functions to return will be created in the 'ex' variable
     
         ex = {}
 
-Connect to the mongodb instance with the help of the connect
-function. This function will cache the connection
-and will not open new connections even if called multiple
-times.
+_connect(callBack)_ is a helper funtion to connect to
+mongodb and to cache the connection. Multiple cals to 
+connect will in this way not produce more connections
+then one call to connect. The callback function will
+receive the mongo database instance object.
 
         mdb = null
         listeners = []
         connect = (callBack) ->
-            if mdb is not null
+            if mdb
                 callBack mdb
                 return
             else
                 listeners.push callBack
 
             mongoDbConnectionString = "mongodb://localhost:27017/Entity" if not mongoDbConnectionString
-            MongoClient.connect mongoDbConnectionString,  { native_parser:true, auto_reconnect: true }, (err, db) ->
+            MongoClient.connect mongoDbConnectionString,  { native_parser: true, auto_reconnect: true }, (err, db) ->
                 if !err
                     mdb = db
+
                 for listener in listeners
                     listener mdb
 
-Create an entity
+###Create an entity
 
 The function takes the following arguments
-entityName - string 
-entityValue - entity object
-callBack - function
+
+_entityName_ - string     
+_entityValue_ - entity object     
+_callBack_ - function     
 
         ex.create = (entityName, entityValue, callBack) ->
-
             connect (mdb) ->
                 mdb.collection entityName, (err, col) ->
                     if !err
@@ -54,28 +57,35 @@ callBack - function
                     else
                         callBack err, col
 
-Update an entity
- 
-The function takes the following arguments:  
-entityName - string  
-entityValue - entity object  
-callBack - function  
+###Update an entity
+
+The update will update the queried document with the 
+key value pairs that is given in entityValue leaving all
+non mentioned key value pairs untouched. This function
+does not in other words replace the queried documents.
+
+The function takes the following arguments:
+
+_entityName_ - The name of the collection to use    
+_entityId_ - The hexadecimal representation of a mongodb ObjectID    
+_entityValue_ - The part of the document that should be updated    
+_callBack_ - function that takes two arguments error if an error occured and count which is the amount of documents that was updated     
 
         ex.update = (entityName, entityId, entityValue, callBack) ->
             connect (mdb) ->
                 mdb.collection entityName, (err, col) ->
                     if !err
                         delete entityValue._id
-                        col.update {"_id": new ObjectID(entityId)}, entityValue, {upsert: true}, (err, item) ->
-                            callBack err, item
+                        col.update {"_id": new ObjectID(entityId)}, {$set: entityValue}, (err, count) ->
+                            callBack err, count
                     else
                         callBack err, col
 
-Query entities
+###Query entities
  
-entityName - string  
-query - mongodb query  
-callBack - function
+_entityName_ - string  
+_query_ - mongodb query  
+_callBack_ - function
 
         ex.get = (entityName, query, callBack) ->
             connect (mdb) ->

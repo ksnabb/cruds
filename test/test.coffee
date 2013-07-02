@@ -50,5 +50,49 @@ describe 'crud', () ->
 						item.do.should.equal 'not touch'
 						item.hello.should.equal 'update'
 						done()
-	
+
+	describe 'get', () ->
+
+		before (done) ->
+
+			crud.create 'Test', {'value': 1}, () ->
+				crud.create 'Test', {'value': 2}, () ->
+					crud.create 'Test', {'value': 3}, () ->
+						done()
+
+		it 'should return documents with value 3 when query is {"value":3}', (done) ->
+
+			crud.get 'Test', {'value': 3}, (err, items) ->
+				should.not.exist err
+				for item in items
+					item.should.have.property('value').with.eql 3
+				done()
+
+		it 'should return documents with value less then 3 when query is { "value": { $lt: 3 }}', (done) ->
+
+			crud.get "Test", {'value': {$lt: 3}}, (err, items) ->
+				should.not.exist err
+				for item in items
+					item.should.have.property('value').with.not.eql 3
+				done()
+
+	describe 'delete', () ->
+
+		it 'should delete all the documents from the collection', (done) ->
+
+			crud.get 'Test', {}, (err, items) ->
+				nritems = items.length
+
+				for item in items
+
+					crud.delete 'Test', item._id.toHexString(), (err) ->
+
+						should.not.exist err
+
+						nritems--
+						if nritems is 0
+
+							crud.get 'Test', {}, (err, items) ->
+								items.should.have.length(0)
+								done()
 

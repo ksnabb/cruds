@@ -82,10 +82,16 @@ _callBack_ - function that takes two arguments error if an error occured and cou
                         callBack err, col
 
 ###Query entities
+
+There are two function to query entities. One takes
+and arbitrary mongodb json formated query _get()_ and 
+the other returns one item by it's id _getById()_.
  
-_entityName_ - string  
+The get function takes the following parameters:
+
+_entityName_ - name of entity collection 
 _query_ - mongodb query  
-_callBack_ - function
+_callBack_ - callback function
 
         ex.get = (entityName, query, callBack) ->
             connect (mdb) ->
@@ -100,7 +106,12 @@ _callBack_ - function
                     else
                         callBack err, col
 
-GET single item with the help of this function
+The getById function return one item from mongoDb
+and it takes the following parameters:
+
+_entityName_ - name of entity collection
+_id_ - id in OjectId hex representation
+_callBack_ - The callback function that gets error object and item as parameters
 
         ex.getById = (entityName, id, callBack) ->
             connect (mdb) ->
@@ -114,7 +125,13 @@ GET single item with the help of this function
                     else
                         callBack err, col
 
-Delete Entity with id
+### Delete entities
+
+The delete function deletes one entity at the time.
+
+_entityName_ - name of entity collection
+_id_ - id in ObjectIf hex representation
+_callBack_ - callback that gets a possible error object as argument
     
         ex.delete = (entityName, id, callBack) ->
             connect (mdb) ->
@@ -126,7 +143,9 @@ Delete Entity with id
                         callBack err, col
 
 
-The following module.export returns and app
+### Express application
+
+The following module.export returns an express app
 that provides the REST interface for an Entity
 
         ex.getApp = (name) ->

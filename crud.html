@@ -164,7 +164,12 @@ does not in other words replace the queried documents.</p>
                 <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <h3>Query entities</h3>
-<p><em>entityName</em> - string<br><em>query</em> - mongodb query<br><em>callBack</em> - function</p>
+<p>There are two function to query entities. One takes
+and arbitrary mongodb json formated query <em>get()</em> and 
+the other returns one item by it&#39;s id <em>getById()</em>.</p>
+<p>The get function takes the following parameters:</p>
+<p><em>entityName</em> - name of entity collection 
+<em>query</em> - mongodb query<br><em>callBack</em> - callback function</p>
 
             </div>
             
@@ -190,7 +195,11 @@ does not in other words replace the queried documents.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
-              <p>GET single item with the help of this function</p>
+              <p>The getById function return one item from mongoDb
+and it takes the following parameters:</p>
+<p><em>entityName</em> - name of entity collection
+<em>id</em> - id in OjectId hex representation
+<em>callBack</em> - The callback function that gets error object and item as parameters</p>
 
             </div>
             
@@ -212,10 +221,14 @@ does not in other words replace the queried documents.</p>
         <li id="section-9">
             <div class="annotation">
               
-              <div class="pilwrap ">
+              <div class="pilwrap for-h3">
                 <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
-              <p>Delete Entity with id</p>
+              <h3>Delete entities</h3>
+<p>The delete function deletes one entity at the time.</p>
+<p><em>entityName</em> - name of entity collection
+<em>id</em> - id in ObjectIf hex representation
+<em>callBack</em> - callback that gets a possible error object as argument</p>
 
             </div>
             
@@ -234,10 +247,11 @@ does not in other words replace the queried documents.</p>
         <li id="section-10">
             <div class="annotation">
               
-              <div class="pilwrap ">
+              <div class="pilwrap for-h3">
                 <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
-              <p>The following module.export returns and app
+              <h3>Express application</h3>
+<p>The following module.export returns an express app
 that provides the REST interface for an Entity</p>
 
             </div>

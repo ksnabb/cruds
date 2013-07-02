@@ -1,6 +1,6 @@
 {
   "name": "cruds",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": false,
   "main": "lib/crud.js",
   "dependencies": {
@@ -13,7 +13,7 @@
     "should": "1.2.2",
     "docco": "*"
   },
-  "description": "Easy CRUD with mongodb and node.js. Under development more documentation comming up soon.",
+  "description": "Easy CRUD with mongodb and node.js. Source code and documentation can be found at github https://github.com/ksnabb/crud",
   "directories": {
     "lib": "lib",
     "doc": "docs",

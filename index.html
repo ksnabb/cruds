@@ -164,15 +164,22 @@ does not in other words replace the queried documents.</p>
                 <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <h3>Query entities</h3>
-<p><em>entityName</em> - string<br><em>query</em> - mongodb query<br><em>callBack</em> - function</p>
+<p>There are two function to query entities. One takes
+and arbitrary mongodb json formated query <em>get()</em> and 
+the other returns one item by it&#39;s id <em>getById()</em>.</p>
+<p>The get function takes the following parameters:</p>
+<p><em>entityName</em> - name of entity collection 
+<em>query</em> - mongodb query
+<em>options</em> - mongodb node.js driver options
+<em>callBack</em> - callback function</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">get</span></span> = (entityName, query, callBack) -&gt;
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">get</span></span> = (entityName, query, options, callBack) -&gt;
         connect (mdb) -&gt;
             mdb.collection entityName, (err, col) -&gt;
                 <span class="keyword">if</span> !err
-                    col.find query, (err, cursor) -&gt;
+                    col.find query, options, (err, cursor) -&gt;
                         <span class="keyword">if</span> !err
                             cursor.toArray (err, items) -&gt;
                                 callBack err, items
@@ -190,7 +197,11 @@ does not in other words replace the queried documents.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
-              <p>GET single item with the help of this function</p>
+              <p>The getById function return one item from mongoDb
+and it takes the following parameters:</p>
+<p><em>entityName</em> - name of entity collection
+<em>id</em> - id in OjectId hex representation
+<em>callBack</em> - The callback function that gets error object and item as parameters</p>
 
             </div>
             
@@ -212,10 +223,14 @@ does not in other words replace the queried documents.</p>
         <li id="section-9">
             <div class="annotation">
               
-              <div class="pilwrap ">
+              <div class="pilwrap for-h3">
                 <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
-              <p>Delete Entity with id</p>
+              <h3>Delete entities</h3>
+<p>The delete function deletes one entity at the time.</p>
+<p><em>entityName</em> - name of entity collection
+<em>id</em> - id in ObjectIf hex representation
+<em>callBack</em> - callback that gets a possible error object as argument</p>
 
             </div>
             
@@ -234,31 +249,18 @@ does not in other words replace the queried documents.</p>
         <li id="section-10">
             <div class="annotation">
               
-              <div class="pilwrap ">
+              <div class="pilwrap for-h3">
                 <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
-              <p>The following module.export returns and app
+              <h3>Express application</h3>
+<p>The following module.export returns an express app
 that provides the REST interface for an Entity</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">getApp</span></span> = (name) -&gt;
         express = require(<span class="string">'express'</span>)
-        app = express()
-
-        <span class="function"><span class="title">getQuery</span></span> = (requestQuery) -&gt;
-
-            query = {}
-
-            <span class="keyword">for</span> key, value <span class="keyword">of</span> requestQuery
-                <span class="keyword">if</span> !isNaN(Number value)
-                    query[key] = Number value
-                <span class="keyword">else</span> <span class="keyword">if</span> key <span class="keyword">is</span> <span class="string">'_id'</span>
-                    query[key] = ObjectID value
-                <span class="keyword">else</span>
-                    query[key] = value
-
-            <span class="keyword">return</span> query</pre></div></div>
+        app = express()</pre></div></div>
             
         </li>
         
@@ -269,21 +271,22 @@ that provides the REST interface for an Entity</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-11">&#182;</a>
               </div>
-              <p>Query items from root url
-by sending query parameters
-in the get request</p>
+              <p>The GET parameters are parsed with the help of the parseQuery function.
+The URI request can have the following parameters:
+<em>query</em> - Stringified JSON object that is passed directly to mongodb find as query parameter
+<em>options</em> - Stringified JSON object that is the options for nodejs mongodb driver find function</p>
+<p>The <em>methods</em> JSON object is and array containing json objects where the key is the cursor method and the value is the
+argument passed to the method.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        app.get <span class="string">'/'</span>, (req, res) -&gt;
+            <div class="content"><div class='highlight'><pre>        <span class="function"><span class="title">parseQuery</span></span> = (requestParam) -&gt;
+            query = {} <span class="comment">#default</span>
+            options = {} <span class="comment">#default</span>
+            query = JSON.parse requestParam.query <span class="keyword">if</span> requestParam.query
+            options = JSON.parse requestParam.options <span class="keyword">if</span> requestParam.options
 
-            query = getQuery req.query
-
-            ex.get name, query, (err, items) -&gt;
-                <span class="keyword">if</span> err
-                    res.send <span class="number">400</span>, <span class="string">"something went wrong"</span>
-                <span class="keyword">else</span>
-                    res.send items</pre></div></div>
+            {query: query, options: options}</pre></div></div>
             
         </li>
         
@@ -294,18 +297,21 @@ in the get request</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
-              <p>Get a single item by sending GET 
-request to root url</p>
+              <p>Query items from root url
+by sending query parameters
+in the get request</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        app.get <span class="string">'/:id'</span>, (req, res) -&gt;
+            <div class="content"><div class='highlight'><pre>        app.get <span class="string">'/'</span>, (req, res) -&gt;
 
-            ex.getId name, req.param(<span class="string">'id'</span>), (err, item) -&gt;
-                <span class="keyword">if</span> !err
-                    res.send item
+            q = parseQuery req.query
+
+            ex.get name, q.query, q.options, (err, items) -&gt;
+                <span class="keyword">if</span> err
+                    res.send <span class="number">400</span>, <span class="string">"something went wrong"</span>
                 <span class="keyword">else</span>
-                    res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span></pre></div></div>
+                    res.send items</pre></div></div>
             
         </li>
         
@@ -315,6 +321,28 @@ request to root url</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Get a single item by sending GET 
+request to root url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.get <span class="string">'/:id'</span>, (req, res) -&gt;
+
+            ex.getById name, req.param(<span class="string">'id'</span>), (err, item) -&gt;
+                <span class="keyword">if</span> !err
+                    res.send item
+                <span class="keyword">else</span>
+                    res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>Post to root to create one entity
 the JSON object of the entity is 
@@ -333,11 +361,11 @@ sent in request body</p>
         </li>
         
         
-        <li id="section-14">
+        <li id="section-15">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
+                <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
               <p>Delete item by sending http delete
 to the entity uri</p>
@@ -355,11 +383,11 @@ to the entity uri</p>
         </li>
         
         
-        <li id="section-15">
+        <li id="section-16">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+                <a class="pilcrow" href="#section-16">&#182;</a>
               </div>
               <p>To update send the new values in
 request body to the entity url</p>
@@ -368,9 +396,16 @@ request body to the entity url</p>
             
             <div class="content"><div class='highlight'><pre>        app.put <span class="string">'/:id'</span>, (req, res) -&gt;
 
-            ex.update name, req.param(<span class="string">'id'</span>), req.body, (err, item) -&gt;
-                <span class="keyword">if</span> !err
-                    res.send item
+            ex.update name, req.param(<span class="string">'id'</span>), req.body, (err, count) -&gt;
+
+                <span class="keyword">if</span> !err <span class="keyword">and</span> count <span class="keyword">is</span> <span class="number">1</span>
+                    ex.getById name, req.param(<span class="string">'id'</span>), (err, item) -&gt;
+                        <span class="keyword">if</span> !err
+                            res.send item
+                        <span class="keyword">else</span>
+                            res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span>
+                <span class="keyword">else</span> <span class="keyword">if</span> count <span class="keyword">is</span> <span class="number">0</span>
+                    res.send <span class="number">404</span>
                 <span class="keyword">else</span> 
                     res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span>
 

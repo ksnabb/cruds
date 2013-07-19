@@ -97,7 +97,7 @@ describe 'crud functions', () ->
 
 				for item in items
 
-					crud.delete 'Test', item._id.toHexString(), (err) ->
+					crud.del 'Test', item._id.toHexString(), (err) ->
 
 						should.not.exist err
 

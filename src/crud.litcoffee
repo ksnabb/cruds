@@ -128,13 +128,13 @@ _callBack_ - The callback function that gets error object and item as parameters
 
 ### Delete entities
 
-The delete function deletes one entity at the time.
+The del function deletes one entity at the time.
 
 _entityName_ - name of entity collection
 _id_ - id in ObjectIf hex representation
 _callBack_ - callback that gets a possible error object as argument
     
-        ex.delete = (entityName, id, callBack) ->
+        ex.del = (entityName, id, callBack) ->
             connect (mdb) ->
                 mdb.collection entityName, (err, col) ->
                     if !err
@@ -210,9 +210,9 @@ sent in request body
 Delete item by sending http delete
 to the entity uri
 
-            app.delete '/:id', (req, res) ->
+            app.del '/:id', (req, res) ->
 
-                ex.delete name, req.param('id'), (err) ->
+                ex.del name, req.param('id'), (err) ->
                     if !err
                         res.send {}
                     else

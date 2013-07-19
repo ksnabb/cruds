@@ -9,8 +9,9 @@
   },
   "devDependencies": {
     "coffee-script": "*",
-    "mocha": "1.11.0",
-    "should": "1.2.2",
+    "mocha": "1.12.0",
+    "chai": "*",
+    "supertest": "*",
     "docco": "*"
   },
   "description": "Easy CRUD with mongodb and node.js. Source code and documentation can be found at github https://github.com/ksnabb/crud",

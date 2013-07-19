@@ -90,14 +90,15 @@ the other returns one item by it's id _getById()_.
 The get function takes the following parameters:
 
 _entityName_ - name of entity collection 
-_query_ - mongodb query  
+_query_ - mongodb query
+_options_ - mongodb node.js driver options
 _callBack_ - callback function
 
-        ex.get = (entityName, query, callBack) ->
+        ex.get = (entityName, query, options, callBack) ->
             connect (mdb) ->
                 mdb.collection entityName, (err, col) ->
                     if !err
-                        col.find query, (err, cursor) ->
+                        col.find query, options, (err, cursor) ->
                             if !err
                                 cursor.toArray (err, items) ->
                                     callBack err, items
@@ -152,29 +153,32 @@ that provides the REST interface for an Entity
             express = require('express')
             app = express()
           
-            getQuery = (requestQuery) ->
-            
-                query = {}
 
-                for key, value of requestQuery
-                    if !isNaN(Number value)
-                        query[key] = Number value
-                    else if key is '_id'
-                        query[key] = ObjectID value
-                    else
-                        query[key] = value
-            
-                return query
-      
+The GET parameters are parsed with the help of the parseQuery function.
+The URI request can have the following parameters:
+_query_ - Stringified JSON object that is passed directly to mongodb find as query parameter
+_options_ - Stringified JSON object that is the options for nodejs mongodb driver find function
+
+The _methods_ JSON object is and array containing json objects where the key is the cursor method and the value is the
+argument passed to the method.
+
+            parseQuery = (requestParam) ->
+                query = {} #default
+                options = {} #default
+                query = JSON.parse requestParam.query if requestParam.query
+                options = JSON.parse requestParam.options if requestParam.options
+
+                {query: query, options: options}
+
 Query items from root url
 by sending query parameters
 in the get request
 
             app.get '/', (req, res) ->
-          
-                query = getQuery req.query
+    
+                q = parseQuery req.query
         
-                ex.get name, query, (err, items) ->
+                ex.get name, q.query, q.options, (err, items) ->
                     if err
                         res.send 400, "something went wrong"
                     else
@@ -185,7 +189,7 @@ request to root url
 
             app.get '/:id', (req, res) ->
 
-                ex.getId name, req.param('id'), (err, item) ->
+                ex.getById name, req.param('id'), (err, item) ->
                     if !err
                         res.send item
                     else
@@ -219,9 +223,16 @@ request body to the entity url
 
             app.put '/:id', (req, res) ->
 
-                ex.update name, req.param('id'), req.body, (err, item) ->
-                    if !err
-                        res.send item
+                ex.update name, req.param('id'), req.body, (err, count) ->
+
+                    if !err and count is 1
+                        ex.getById name, req.param('id'), (err, item) ->
+                            if !err
+                                res.send item
+                            else
+                                res.send 400, 'Something went wrong!'
+                    else if count is 0
+                        res.send 404
                     else 
                         res.send 400, 'Something went wrong!'
         

@@ -1,9 +1,9 @@
 
-
-should = require "should"
+chai = require "chai"
+should = chai.should()
 crud = require("..")()
 
-describe 'crud', () ->
+describe 'crud functions', () ->
 	
 	describe 'create', () ->
 
@@ -55,14 +55,14 @@ describe 'crud', () ->
 
 		before (done) ->
 
-			crud.create 'Test', {'value': 1}, () ->
-				crud.create 'Test', {'value': 2}, () ->
-					crud.create 'Test', {'value': 3}, () ->
+			crud.create 'Test', {'value': 1, 'otherkey': true}, () ->
+				crud.create 'Test', {'value': 2, 'otherkey': false}, () ->
+					crud.create 'Test', {'value': 3, 'other': true}, () ->
 						done()
 
 		it 'should return documents with value 3 when query is {"value":3}', (done) ->
 
-			crud.get 'Test', {'value': 3}, (err, items) ->
+			crud.get 'Test', {'value': 3}, {}, (err, items) ->
 				should.not.exist err
 				for item in items
 					item.should.have.property('value').with.eql 3
@@ -70,17 +70,29 @@ describe 'crud', () ->
 
 		it 'should return documents with value less then 3 when query is { "value": { $lt: 3 }}', (done) ->
 
-			crud.get "Test", {'value': {$lt: 3}}, (err, items) ->
+			crud.get "Test", {'value': {$lt: 3}}, {}, (err, items) ->
 				should.not.exist err
 				for item in items
-					item.should.have.property('value').with.not.eql 3
+					item.should.have.property('value')
+					(item.value < 3).should.be.true
 				done()
+
+		it 'should return only the amount of documents that is set in the limit option', (done) ->
+
+			crud.get 'Test', {}, {limit: 1}, (err, items) ->
+				should.not.exist err
+				items.should.have.lengthOf 1
+
+				crud.get 'Test', {}, {limit: 2}, (err, items) ->
+					should.not.exist err
+					items.should.have.lengthOf 2
+					done()
 
 	describe 'delete', () ->
 
 		it 'should delete all the documents from the collection', (done) ->
 
-			crud.get 'Test', {}, (err, items) ->
+			crud.get 'Test', {}, {}, (err, items) ->
 				nritems = items.length
 
 				for item in items
@@ -92,7 +104,168 @@ describe 'crud', () ->
 						nritems--
 						if nritems is 0
 
-							crud.get 'Test', {}, (err, items) ->
+							crud.get 'Test', {}, {}, (err, items) ->
 								items.should.have.length(0)
 								done()
+
+
+request = require "supertest"
+express = require "express"
+#create the application
+app = express()
+
+#body parser is required for the REST to work
+app.use express.bodyParser()
+app.use "/testrest", crud.getApp("testrest")
+
+describe 'crud REST interface', () ->
+	
+	describe 'HTTP POST / create', () ->
+
+		it 'should create a new document', (done) ->
+
+			request(app)
+				.post("/testrest")
+				.send({'hello': 'create'})
+				.expect(200)
+				.end (err, res) ->
+					should.not.exist err
+					res.body.should.have.keys 'hello', '_id'
+					done()
+
+	describe 'HTTP PUT / update', () ->
+
+		it 'should update an existing document', (done) ->
+
+			request(app)
+				.post("/testrest")
+				.send({'hello': 'upd'})
+				.end (err, res) ->
+					should.not.exist err
+					res.body.should.have.keys '_id', 'hello'
+					res.body.should.have.property 'hello', 'upd'
+
+					request(app)
+						.put("/testrest/#{res.body._id}")
+						.send({'hello': 'update'})
+						.expect(200)
+						.end (err, res) ->
+							should.not.exist err
+							res.body.should.have.keys '_id', 'hello'
+							res.body.should.have.property 'hello', 'update'
+							done()
+
+		it 'should return 404 not found if the document queried does not exist', (done) ->
+
+			request(app)
+				.put("/testrest/doesnotexist")
+				.send({'hello': 'doesnotexist'})
+				.expect(404, done)
+
+
+		it 'should only update the given key value pairs', (done) ->
+
+			request(app)
+				.post("/testrest")
+				.send({'hello': 'upd', 'do': 'not touch'})
+				.expect(200)
+				.end (err, res) ->
+					should.not.exist err
+
+					request(app)
+						.put("/testrest/#{res.body._id}")
+						.send({'hello': 'update'})
+						.expect(200)
+						.end (err, res) ->
+							should.not.exist err
+							res.body.should.have.keys '_id', 'hello', 'do'
+							res.body.do.should.equal 'not touch'
+							res.body.hello.should.equal 'update'
+							done()
+
+	describe 'HTTP GET / get', () ->
+
+		before (done) ->
+			request(app)
+				.post("/testrest")
+				.send({'value': 1})
+				.end (err, res) ->
+					request(app)
+						.post("/testrest")
+						.send({'value': 2})
+						.end (err, res) ->
+							request(app)
+								.post("/testrest")
+								.send({'value': 3})
+								.end (err, res) ->
+									done()
+
+		it 'should return documents with value 3 when query is {"value": 3}', (done) ->
+
+			request(app)
+				.get("/testrest")
+				.query({query: JSON.stringify {'value': 3}})
+				.end (err, res) ->
+					should.not.exist err
+
+					for item in res.body
+						item.should.have.property('value').with.eql 3
+
+					done()
+
+		it 'should return documents with values less then 3 when query is { "value": { $lt: 3 }}', (done) ->
+
+			request(app)
+				.get("/testrest")
+				.query({query: JSON.stringify {'value': {$lt: 3}}})
+				.end (err, res) ->
+					should.not.exist err
+
+					for item in res.body
+						item.should.have.property('value')
+						(item.value < 3).should.be.true
+
+					done()
+
+		it 'should return only the amount of documents that is set in the limit option', (done) ->
+
+			request(app)
+				.get("/testrest")
+				.query({options: JSON.stringify {limit: 1}})
+				.end (err, res) ->
+					should.not.exist err
+					res.body.should.have.lengthOf 1
+
+					request(app)
+						.get("/testrest")
+						.query({options: JSON.stringify {limit: 2}})
+						.end (err, res) ->
+							should.not.exist err
+							res.body.should.have.lengthOf 2
+							done()
+
+	describe 'HTTP DELETE / delete', () ->
+
+		it 'should delete all the documents from the collection', (done) ->
+
+			request(app)
+				.get("/testrest")
+				.end (err, res) ->
+					nritems = res.body.length
+
+					for item in res.body
+						request(app)
+							.del("/testrest/#{item._id}")
+							.end (err, res) ->
+								nritems--
+								if nritems is 0
+									request(app)
+										.get("/testrest")
+										.end (err, res) ->
+											res.body.should.have.length 0
+											done()
+						
+
+
+
 

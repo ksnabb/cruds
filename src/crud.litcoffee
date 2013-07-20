@@ -95,10 +95,11 @@ _options_ - mongodb node.js driver options
 _callBack_ - callback function
 
         ex.get = (entityName, query, options, callBack) ->
+
             connect (mdb) ->
                 mdb.collection entityName, (err, col) ->
                     if !err
-                        col.find query, options, (err, cursor) ->
+                        col.find query, options or {}, (err, cursor) ->
                             if !err
                                 cursor.toArray (err, items) ->
                                     callBack err, items
@@ -152,7 +153,10 @@ that provides the REST interface for an Entity
         ex.getApp = (name) ->
             express = require('express')
             app = express()
-          
+
+The application requires json parser or bodyparser middleware to work.
+
+            app.use express.bodyParser()
 
 The GET parameters are parsed with the help of the parseQuery function.
 The URI request can have the following parameters:
@@ -237,6 +241,76 @@ request body to the entity url
                         res.send 400, 'Something went wrong!'
         
             app
+
+
+### Set up of url endpoints
+
+To be able to set up both a RESTful interface and a websocket interface 
+the set method can be used. 
+
+_url_ - endpoint for the request
+_name_ - name of the entity to use for saving to the database
+_app_ - Express application
+_socketio_ - Socket.io that is set up to listen to a httpserver
+        
+        ex.set = (url, name, app, socketio) ->
+
+set up the REST interface using getApp
+
+            app.use url, ex.getApp(name)
+
+set upt the websocket interface and provide the same REST methods GET, CREATE, UPDATE, DELETE and additional SUBSCRIBE
+
+            socketio
+                .of(url)
+                .on 'connection', (socket) ->
+
+Sending a 'create' messages with the json of the document to be created
+will create the document or send and error object back to the client.
+
+                    socket.on 'create', (data) ->
+
+                        ex.create name, data, (err, item) ->
+                            if !err
+                                socket.emit 'create', data
+                            else 
+                                socket.emit 'create', {'error': 400}
+
+Updating a document requires the client to send a json that includes the _id for 
+the document to be updated.
+
+                    socket.on 'update', (data) ->
+
+                        id = data._id
+                    
+                        if not id
+                            socket.emit {'error': 400}
+                        else
+                            ex.update name, id, data, (err, count) ->
+
+                                if !err and count is 1
+                                    ex.getById name, id, (err, item) ->
+                                        if !err
+                                            socket.emit 'update', item
+                                        else
+                                            socket.emit 'update', {'error': 400}
+                                else if count is 0
+                                    socket.emit 'update', {'error': 404}
+                                else
+                                    socket.emit 'update', {'error': 400}
+
+                    socket.on 'get', (data) ->
+
+                        ex.get name, data.query or {}, data.options or {}, (err, items) ->
+                            socket.emit 'get', items
+
+                    socket.on 'delete', (data) ->
+
+                        ex.del name, data._id, (err) ->
+
+                            socket.emit 'delete', {}
+
+
 
         ex
 

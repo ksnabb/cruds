@@ -114,8 +114,6 @@ express = require "express"
 #create the application
 app = express()
 
-#body parser is required for the REST to work
-app.use express.bodyParser()
 app.use "/testrest", crud.getApp("testrest")
 
 describe 'crud REST interface', () ->
@@ -264,6 +262,113 @@ describe 'crud REST interface', () ->
 										.end (err, res) ->
 											res.body.should.have.length 0
 											done()
+
+
+#set up websocket interface
+server = require("http").createServer(app)
+io = require("socket.io").listen(server)
+crud.set "/wsrest", "wstest", app, io
+
+server.listen(3010)
+
+describe 'cruds websocket interface', () ->
+
+	socket = null
+
+	it 'should be able to connect', (done) ->
+
+		ioclient = require 'socket.io-client'
+		socket = ioclient.connect 'http://localhost:3010/wsrest'
+
+		socket.once 'connect', () ->
+			socket.socket.connected.should.be.true
+			done()
+
+
+	describe 'create', () ->
+
+		it 'should create a new document', (done) ->
+
+			socket.emit 'create', {'hello': 'create'}
+
+			socket.once 'create', (data) ->
+				data.should.have.keys '_id', 'hello'
+				done()
+
+	describe 'update', () ->
+
+		it 'should update an existing document', (done) ->
+
+			socket.emit 'create', {'hello': 'upd'}
+
+			socket.once 'create', (data) ->
+				data.should.have.keys '_id', 'hello'
+
+				socket.emit 'update', {'hello': 'update', '_id': data._id}
+
+				socket.once 'update', (data) ->
+					data.should.have.keys '_id', 'hello'
+					data.should.have.property 'hello', 'update'
+					done()
+
+	describe 'get', () ->
+
+		before (done) ->
+
+			socket.emit 'create', {'value': 1}
+
+			socket.once 'create', (data) ->
+				data.should.have.keys '_id', 'value'
+
+				socket.emit 'create', {'value': 2}
+
+				socket.once 'create', (data) ->
+					data.should.have.keys '_id', 'value'
+
+					socket.emit 'create', {'value': 3}
+
+					socket.once 'create', (data) ->
+						data.should.have.keys '_id', 'value'
+						done()
+
+
+		it 'should return documents with value 3 when query is {"value": 3}', (done) ->
+
+			socket.emit 'get', {query: {value: 3}}
+
+			socket.once 'get', (data) ->
+				for item in data
+					item.should.have.property('value').with.eql 3
+
+				done()
+
+	describe 'delete', () ->
+
+		it 'should delete all the documents from the collection', (done) ->
+
+			socket.emit 'get', {}
+
+			socket.once 'get', (data) ->
+				nritems = data.length
+
+				socket.on 'delete', () ->
+					nritems--
+					if nritems is 0
+
+						socket.emit 'get', {}
+
+						socket.on 'get', (data) ->
+							data.should.have.length 0
+							done()
+
+				for item in data
+					socket.emit 'delete', {_id: item._id}
+
+
+
+
+
+
 						
 
 

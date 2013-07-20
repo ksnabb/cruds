@@ -267,6 +267,7 @@ describe 'crud REST interface', () ->
 #set up websocket interface
 server = require("http").createServer(app)
 io = require("socket.io").listen(server)
+io.set 'log level', 1
 crud.set "/wsrest", "wstest", app, io
 
 server.listen(3010)

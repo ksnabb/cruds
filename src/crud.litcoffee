@@ -4,7 +4,7 @@ and a socket.io interface for crud and subscribe unsubscribe to a mongodb docume
 
 The REST interface is fully compatible with backbone.js models.
 
-To use the module just do require("crud")( mongodb connection string )
+To use the module just do require("cruds")( mongodb connection string )
 
     module.exports = (mongoDbConnectionString) ->
     

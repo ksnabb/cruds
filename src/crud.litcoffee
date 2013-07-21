@@ -1,11 +1,8 @@
-    
-This Module provides functions to 
-create, update, delete and get entities
-from mongodb.
+This module provides three levels of mongodb crud functionality. Simple javascript
+functions to access mongodb, a RESTful interface for mongodb using node.js and express app,
+and a socket.io interface for crud and subscribe unsubscribe to a mongodb document.
 
-The module also provides a RESTfull interfaces for crud.
-
-The interface is fully compatible with backbone.js models.
+The REST interface is fully compatible with backbone.js models.
 
 To use the module just do require("crud")( mongodb connection string )
 
@@ -19,7 +16,7 @@ Functions to return will be created in the 'ex' variable
         ex = {}
 
 _connect(callBack)_ is a helper funtion to connect to
-mongodb and to cache the connection. Multiple cals to 
+mongodb and to cache the connection. Multiple calls to 
 connect will in this way not produce more connections
 then one call to connect. The callback function will
 receive the mongo database instance object.
@@ -62,7 +59,7 @@ _callBack_ - function
 The update will update the queried document with the 
 key value pairs that is given in entityValue leaving all
 non mentioned key value pairs untouched. This function
-does not in other words replace the queried documents.
+does in other words not replace the queried documents.
 
 The function takes the following arguments:
 
@@ -89,10 +86,10 @@ the other returns one item by it's id _getById()_.
  
 The get function takes the following parameters:
 
-_entityName_ - name of entity collection 
-_query_ - mongodb query
-_options_ - mongodb node.js driver options
-_callBack_ - callback function
+_entityName_ - name of entity collection  
+_query_ - mongodb query  
+_options_ - mongodb node.js driver options  
+_callBack_ - callback function  
 
         ex.get = (entityName, query, options, callBack) ->
 
@@ -108,12 +105,12 @@ _callBack_ - callback function
                     else
                         callBack err, col
 
-The getById function return one item from mongoDb
+The _getById_ function returns one item from mongodb
 and it takes the following parameters:
 
-_entityName_ - name of entity collection
-_id_ - id in OjectId hex representation
-_callBack_ - The callback function that gets error object and item as parameters
+_entityName_ - name of entity collection  
+_id_ - id in OjectId hex representation  
+_callBack_ - The callback function that gets error object and item as parameters  
 
         ex.getById = (entityName, id, callBack) ->
             connect (mdb) ->
@@ -129,11 +126,11 @@ _callBack_ - The callback function that gets error object and item as parameters
 
 ### Delete entities
 
-The del function deletes one entity at the time.
+The del function deletes one entity
 
-_entityName_ - name of entity collection
-_id_ - id in ObjectIf hex representation
-_callBack_ - callback that gets a possible error object as argument
+_entityName_ - name of entity collection  
+_id_ - id in hex  
+_callBack_ - callback that gets an error object as parameter  
     
         ex.del = (entityName, id, callBack) ->
             connect (mdb) ->
@@ -145,7 +142,7 @@ _callBack_ - callback that gets a possible error object as argument
                         callBack err, col
 
 
-### Express application
+### Request listener application
 
 The following module.export returns an express app
 that provides the REST interface for an Entity
@@ -160,11 +157,8 @@ The application requires json parser or bodyparser middleware to work.
 
 The GET parameters are parsed with the help of the parseQuery function.
 The URI request can have the following parameters:
-_query_ - Stringified JSON object that is passed directly to mongodb find as query parameter
-_options_ - Stringified JSON object that is the options for nodejs mongodb driver find function
-
-The _methods_ JSON object is and array containing json objects where the key is the cursor method and the value is the
-argument passed to the method.
+_query_ - Stringified JSON object that is passed directly to mongodb find as query parameter  
+_options_ - Stringified JSON object that is the options for nodejs mongodb driver find function  
 
             parseQuery = (requestParam) ->
                 query = {} #default
@@ -174,9 +168,7 @@ argument passed to the method.
 
                 {query: query, options: options}
 
-Query items from root url
-by sending query parameters
-in the get request
+Query items by sending query parameters as defined above to the root of the REST interface.
 
             app.get '/', (req, res) ->
     
@@ -188,8 +180,7 @@ in the get request
                     else
                         res.send items
       
-Get a single item by sending GET 
-request to root url
+Get a single item by sending a GET request to the items url
 
             app.get '/:id', (req, res) ->
 
@@ -199,9 +190,7 @@ request to root url
                     else
                         res.send 400, 'Something went wrong!'
               
-Post to root to create one entity
-the JSON object of the entity is 
-sent in request body
+Post to create a entity. The JSON object of the entity is sent in request body
 
             app.post '/', (req, res) ->
 
@@ -211,8 +200,7 @@ sent in request body
                     else 
                         res.send 400, 'Something went wrong!'
     
-Delete item by sending http delete
-to the entity uri
+Delete item by sending http delete to the entity url
 
             app.del '/:id', (req, res) ->
 
@@ -222,8 +210,7 @@ to the entity uri
                     else
                         res.send 400, "Something went wrong!"
     
-To update send the new values in
-request body to the entity url
+To update send the new values in request body to the entity url
 
             app.put '/:id', (req, res) ->
 
@@ -246,27 +233,26 @@ request body to the entity url
 ### Set up of url endpoints
 
 To be able to set up both a RESTful interface and a websocket interface 
-the set method can be used. 
+the _set_ method can be used. 
 
-_url_ - endpoint for the request
-_name_ - name of the entity to use for saving to the database
-_app_ - Express application
-_socketio_ - Socket.io that is set up to listen to a httpserver
+_url_ - endpoint for the request  
+_name_ - name of the entity to use for saving to the database  
+_app_ - Express application  
+_socketio_ - Socket.io that is set up to listen to a node.js httpserver  
         
         ex.set = (url, name, app, socketio) ->
 
-set up the REST interface using getApp
+Set up the REST interface using getApp
 
             app.use url, ex.getApp(name)
 
-set up the websocket interface and provide the same REST methods GET, CREATE, UPDATE, DELETE and additional SUBSCRIBE
+Set up the websocket interface and provide the same REST methods _get_, _create_, _update_, _delete_, _subscribe_ and _unsubscribe_.
 
             socketio
                 .of(url)
                 .on 'connection', (socket) ->
 
-Sending a 'create' messages with the json of the document to be created
-will create the document or send and error object back to the client.
+Create documents by sending 'create' message together with a JSON object.
 
                     socket.on 'create', (data) ->
 
@@ -276,8 +262,8 @@ will create the document or send and error object back to the client.
                             else 
                                 socket.emit 'create', {'error': 400}
 
-Updating a document requires the client to send a json that includes the _id for 
-the document to be updated.
+Update a document by sending a 'update' message with an object including and '_id' and the
+key values to be updated.
 
                     socket.on 'update', (data) ->
 
@@ -311,9 +297,8 @@ the document to be updated.
 
                             socket.emit 'delete', {}
 
-Sending subscribe message requires a object that is the query for documents to subscribe to.
-This object is directly used as the query object for mongodb and the returned documents
-_id will be the name of the rooms subscribed to.
+Subscribing to entities is done by sending 'subscribe' together with query object. The
+returned documents for the query will be subscribed to for updates.
 
                     socket.on 'subscribe', (data) ->
 
@@ -322,8 +307,8 @@ _id will be the name of the rooms subscribed to.
                                 socket.join item._id
                                 socket.emit 'subscribed', item
 
-The unsubscribe works the same way as the subscribe except that the query and the returned documents
-ids will be unsubscribed from.
+The unsubscribe works the same way as the subscribe and will unsubscribe from all documents that
+fit the query object.
 
                     socket.on 'unsubscribe', (data) ->
 

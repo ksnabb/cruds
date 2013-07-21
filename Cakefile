@@ -227,5 +227,7 @@ mocha = (options, callback) ->
 # **then** invoke launch passing docco command
 docco = (callback) ->
   #if moduleExists('docco')
-  walk 'src', (err, files) -> launch 'docco', files, callback
+  walk 'src', (err, files) -> 
+    files.unshift '-l', 'parallel'
+    launch 'docco', files, callback
 

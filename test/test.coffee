@@ -344,7 +344,6 @@ describe 'cruds websocket interface', () ->
 
 	describe 'subscribe', () ->
 
-
 		it 'should subscribe to set of entities defined by a query for updates', (done) ->
 
 			socket2 = ioclient.connect 'http://127.0.0.1:3010/wsrest'

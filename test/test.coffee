@@ -267,24 +267,23 @@ describe 'crud REST interface', () ->
 #set up websocket interface
 server = require("http").createServer(app)
 io = require("socket.io").listen(server)
-io.set 'log level', 1
+io.set 'log level', 0
 crud.set "/wsrest", "wstest", app, io
 
 server.listen(3010)
 
-describe 'cruds websocket interface', () ->
+ioclient = require 'socket.io-client'
+socket = socket2 = null	
 
-	socket = null
+describe 'cruds websocket interface', () ->
 
 	it 'should be able to connect', (done) ->
 
-		ioclient = require 'socket.io-client'
 		socket = ioclient.connect 'http://localhost:3010/wsrest'
 
 		socket.once 'connect', () ->
 			socket.socket.connected.should.be.true
 			done()
-
 
 	describe 'create', () ->
 
@@ -343,6 +342,35 @@ describe 'cruds websocket interface', () ->
 
 				done()
 
+	describe 'subscribe', () ->
+
+
+		it 'should subscribe to set of entities defined by a query for updates', (done) ->
+
+			socket2 = ioclient.connect 'http://127.0.0.1:3010/wsrest'
+
+			socket2.once 'connect', () ->
+
+				socket2.socket.connected.should.be.true
+
+				#subscribe to entities with value 3
+				socket2.emit 'subscribe', {value: 3}
+
+				socket2.once 'subscribed', (data) ->
+
+					#event is subscribed update = supdate
+					socket2.once 'supdate', (data) ->
+						data.should.have.property 'value', 3
+						data.should.have.property 'subscribe', true
+						done()
+
+					socket.emit 'get', {query: {value: 3}}
+
+					socket.once 'get', (data) ->
+						for d in data
+							d.subscribe = true
+							socket.emit 'update', d 
+
 	describe 'delete', () ->
 
 		it 'should delete all the documents from the collection', (done) ->
@@ -364,6 +392,7 @@ describe 'cruds websocket interface', () ->
 
 				for item in data
 					socket.emit 'delete', {_id: item._id}
+
 
 
 

@@ -259,7 +259,7 @@ set up the REST interface using getApp
 
             app.use url, ex.getApp(name)
 
-set upt the websocket interface and provide the same REST methods GET, CREATE, UPDATE, DELETE and additional SUBSCRIBE
+set up the websocket interface and provide the same REST methods GET, CREATE, UPDATE, DELETE and additional SUBSCRIBE
 
             socketio
                 .of(url)
@@ -292,6 +292,7 @@ the document to be updated.
                                     ex.getById name, id, (err, item) ->
                                         if !err
                                             socket.emit 'update', item
+                                            socketio.of(url).in(item._id).emit 'supdate', item
                                         else
                                             socket.emit 'update', {'error': 400}
                                 else if count is 0
@@ -310,6 +311,25 @@ the document to be updated.
 
                             socket.emit 'delete', {}
 
+Sending subscribe message requires a object that is the query for documents to subscribe to.
+This object is directly used as the query object for mongodb and the returned documents
+_id will be the name of the rooms subscribed to.
+
+                    socket.on 'subscribe', (data) ->
+
+                        ex.get name, data or {}, {fields: [{_id: 1}]}, (err, items) ->
+                            for item in items
+                                socket.join item._id
+                                socket.emit 'subscribed', item
+
+The unsubscribe works the same way as the subscribe except that the query and the returned documents
+ids will be unsubscribed from.
+
+                    socket.on 'unsubscribe', (data) ->
+
+                        ex.get name, data or {}, {fields: [{_id: 1}]}, (err, items) ->
+                            for item in items
+                                socket.leave item._id
 
 
         ex

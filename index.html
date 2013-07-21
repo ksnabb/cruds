@@ -27,23 +27,10 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-1">&#182;</a>
               </div>
-              
-            </div>
-            
-        </li>
-        
-        
-        <li id="section-2">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
-              </div>
-              <p>This Module provides functions to 
-create, update, delete and get entities
-from mongodb.</p>
-<p>The module also provides a RESTfull interfaces for crud.</p>
-<p>The interface is fully compatible with backbone.js models.</p>
+              <p>This module provides three levels of mongodb crud functionality. Simple javascript
+functions to access mongodb, a RESTful interface for mongodb using node.js and express app,
+and a socket.io interface for crud and subscribe unsubscribe to a mongodb document.</p>
+<p>The REST interface is fully compatible with backbone.js models.</p>
 <p>To use the module just do require(&quot;crud&quot;)( mongodb connection string )</p>
 
             </div>
@@ -56,11 +43,11 @@ from mongodb.</p>
         </li>
         
         
-        <li id="section-3">
+        <li id="section-2">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-3">&#182;</a>
+                <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
               <p>Functions to return will be created in the &#39;ex&#39; variable</p>
 
@@ -71,14 +58,14 @@ from mongodb.</p>
         </li>
         
         
-        <li id="section-4">
+        <li id="section-3">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+                <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
               <p><em>connect(callBack)</em> is a helper funtion to connect to
-mongodb and to cache the connection. Multiple cals to 
+mongodb and to cache the connection. Multiple calls to 
 connect will in this way not produce more connections
 then one call to connect. The callback function will
 receive the mongo database instance object.</p>
@@ -105,11 +92,11 @@ receive the mongo database instance object.</p>
         </li>
         
         
-        <li id="section-5">
+        <li id="section-4">
             <div class="annotation">
               
               <div class="pilwrap for-h3">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
               <h3>Create an entity</h3>
 <p>The function takes the following arguments</p>
@@ -128,17 +115,17 @@ receive the mongo database instance object.</p>
         </li>
         
         
-        <li id="section-6">
+        <li id="section-5">
             <div class="annotation">
               
               <div class="pilwrap for-h3">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
               <h3>Update an entity</h3>
 <p>The update will update the queried document with the 
 key value pairs that is given in entityValue leaving all
 non mentioned key value pairs untouched. This function
-does not in other words replace the queried documents.</p>
+does in other words not replace the queried documents.</p>
 <p>The function takes the following arguments:</p>
 <p><em>entityName</em> - The name of the collection to use<br><em>entityId</em> - The hexadecimal representation of a mongodb ObjectID<br><em>entityValue</em> - The part of the document that should be updated<br><em>callBack</em> - function that takes two arguments error if an error occured and count which is the amount of documents that was updated     </p>
 
@@ -157,29 +144,27 @@ does not in other words replace the queried documents.</p>
         </li>
         
         
-        <li id="section-7">
+        <li id="section-6">
             <div class="annotation">
               
               <div class="pilwrap for-h3">
-                <a class="pilcrow" href="#section-7">&#182;</a>
+                <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
               <h3>Query entities</h3>
 <p>There are two function to query entities. One takes
 and arbitrary mongodb json formated query <em>get()</em> and 
 the other returns one item by it&#39;s id <em>getById()</em>.</p>
 <p>The get function takes the following parameters:</p>
-<p><em>entityName</em> - name of entity collection 
-<em>query</em> - mongodb query
-<em>options</em> - mongodb node.js driver options
-<em>callBack</em> - callback function</p>
+<p><em>entityName</em> - name of entity collection<br><em>query</em> - mongodb query<br><em>options</em> - mongodb node.js driver options<br><em>callBack</em> - callback function  </p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">get</span></span> = (entityName, query, options, callBack) -&gt;
+
         connect (mdb) -&gt;
             mdb.collection entityName, (err, col) -&gt;
                 <span class="keyword">if</span> !err
-                    col.find query, options, (err, cursor) -&gt;
+                    col.find query, options <span class="keyword">or</span> {}, (err, cursor) -&gt;
                         <span class="keyword">if</span> !err
                             cursor.toArray (err, items) -&gt;
                                 callBack err, items
@@ -191,17 +176,15 @@ the other returns one item by it&#39;s id <em>getById()</em>.</p>
         </li>
         
         
-        <li id="section-8">
+        <li id="section-7">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-8">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
-              <p>The getById function return one item from mongoDb
+              <p>The <em>getById</em> function returns one item from mongodb
 and it takes the following parameters:</p>
-<p><em>entityName</em> - name of entity collection
-<em>id</em> - id in OjectId hex representation
-<em>callBack</em> - The callback function that gets error object and item as parameters</p>
+<p><em>entityName</em> - name of entity collection<br><em>id</em> - id in OjectId hex representation<br><em>callBack</em> - The callback function that gets error object and item as parameters  </p>
 
             </div>
             
@@ -220,21 +203,19 @@ and it takes the following parameters:</p>
         </li>
         
         
-        <li id="section-9">
+        <li id="section-8">
             <div class="annotation">
               
               <div class="pilwrap for-h3">
-                <a class="pilcrow" href="#section-9">&#182;</a>
+                <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
               <h3>Delete entities</h3>
-<p>The delete function deletes one entity at the time.</p>
-<p><em>entityName</em> - name of entity collection
-<em>id</em> - id in ObjectIf hex representation
-<em>callBack</em> - callback that gets a possible error object as argument</p>
+<p>The del function deletes one entity</p>
+<p><em>entityName</em> - name of entity collection<br><em>id</em> - id in hex<br><em>callBack</em> - callback that gets an error object as parameter  </p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">delete</span></span> = (entityName, id, callBack) -&gt;
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">del</span></span> = (entityName, id, callBack) -&gt;
         connect (mdb) -&gt;
             mdb.collection entityName, (err, col) -&gt;
                 <span class="keyword">if</span> !err
@@ -246,13 +227,13 @@ and it takes the following parameters:</p>
         </li>
         
         
-        <li id="section-10">
+        <li id="section-9">
             <div class="annotation">
               
               <div class="pilwrap for-h3">
-                <a class="pilcrow" href="#section-10">&#182;</a>
+                <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
-              <h3>Express application</h3>
+              <h3>Request listener application</h3>
 <p>The following module.export returns an express app
 that provides the REST interface for an Entity</p>
 
@@ -265,6 +246,21 @@ that provides the REST interface for an Entity</p>
         </li>
         
         
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>The application requires json parser or bodyparser middleware to work.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.use express.bodyParser()</pre></div></div>
+            
+        </li>
+        
+        
         <li id="section-11">
             <div class="annotation">
               
@@ -273,10 +269,7 @@ that provides the REST interface for an Entity</p>
               </div>
               <p>The GET parameters are parsed with the help of the parseQuery function.
 The URI request can have the following parameters:
-<em>query</em> - Stringified JSON object that is passed directly to mongodb find as query parameter
-<em>options</em> - Stringified JSON object that is the options for nodejs mongodb driver find function</p>
-<p>The <em>methods</em> JSON object is and array containing json objects where the key is the cursor method and the value is the
-argument passed to the method.</p>
+<em>query</em> - Stringified JSON object that is passed directly to mongodb find as query parameter<br><em>options</em> - Stringified JSON object that is the options for nodejs mongodb driver find function  </p>
 
             </div>
             
@@ -297,9 +290,7 @@ argument passed to the method.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
-              <p>Query items from root url
-by sending query parameters
-in the get request</p>
+              <p>Query items by sending query parameters as defined above to the root of the REST interface.</p>
 
             </div>
             
@@ -322,8 +313,7 @@ in the get request</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
-              <p>Get a single item by sending GET 
-request to root url</p>
+              <p>Get a single item by sending a GET request to the items url</p>
 
             </div>
             
@@ -344,9 +334,7 @@ request to root url</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
-              <p>Post to root to create one entity
-the JSON object of the entity is 
-sent in request body</p>
+              <p>Post to create a entity. The JSON object of the entity is sent in request body</p>
 
             </div>
             
@@ -367,14 +355,13 @@ sent in request body</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
-              <p>Delete item by sending http delete
-to the entity uri</p>
+              <p>Delete item by sending http delete to the entity url</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        app.<span class="keyword">delete</span> <span class="string">'/:id'</span>, (req, res) -&gt;
+            <div class="content"><div class='highlight'><pre>        app.del <span class="string">'/:id'</span>, (req, res) -&gt;
 
-            ex.<span class="keyword">delete</span> name, req.param(<span class="string">'id'</span>), (err) -&gt;
+            ex.del name, req.param(<span class="string">'id'</span>), (err) -&gt;
                 <span class="keyword">if</span> !err
                     res.send {}
                 <span class="keyword">else</span>
@@ -389,8 +376,7 @@ to the entity uri</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-16">&#182;</a>
               </div>
-              <p>To update send the new values in
-request body to the entity url</p>
+              <p>To update send the new values in request body to the entity url</p>
 
             </div>
             
@@ -409,7 +395,166 @@ request body to the entity url</p>
                 <span class="keyword">else</span> 
                     res.send <span class="number">400</span>, <span class="string">'Something went wrong!'</span>
 
-        app
+        app</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h3">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <h3>Set up of url endpoints</h3>
+<p>To be able to set up both a RESTful interface and a websocket interface 
+the <em>set</em> method can be used. </p>
+<p><em>url</em> - endpoint for the request<br><em>name</em> - name of the entity to use for saving to the database<br><em>app</em> - Express application<br><em>socketio</em> - Socket.io that is set up to listen to a node.js httpserver  </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    ex.<span class="function"><span class="title">set</span></span> = (url, name, app, socketio) -&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>Set up the REST interface using getApp</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        app.use url, ex.getApp(name)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Set up the websocket interface and provide the same REST methods <em>get</em>, <em>create</em>, <em>update</em>, <em>delete</em>, <em>subscribe</em> and <em>unsubscribe</em>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        socketio
+            .<span class="keyword">of</span>(url)
+            .<span class="literal">on</span> <span class="string">'connection'</span>, (socket) -&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Create documents by sending &#39;create&#39; message together with a JSON object.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                socket.<span class="literal">on</span> <span class="string">'create'</span>, (data) -&gt;
+
+                    ex.create name, data, (err, item) -&gt;
+                        <span class="keyword">if</span> !err
+                            socket.emit <span class="string">'create'</span>, data
+                        <span class="keyword">else</span> 
+                            socket.emit <span class="string">'create'</span>, {<span class="string">'error'</span>: <span class="number">400</span>}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Update a document by sending a &#39;update&#39; message with an object including and &#39;_id&#39; and the
+key values to be updated.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                socket.<span class="literal">on</span> <span class="string">'update'</span>, (data) -&gt;
+
+                    id = data._id
+
+                    <span class="keyword">if</span> <span class="keyword">not</span> id
+                        socket.emit {<span class="string">'error'</span>: <span class="number">400</span>}
+                    <span class="keyword">else</span>
+                        ex.update name, id, data, (err, count) -&gt;
+
+                            <span class="keyword">if</span> !err <span class="keyword">and</span> count <span class="keyword">is</span> <span class="number">1</span>
+                                ex.getById name, id, (err, item) -&gt;
+                                    <span class="keyword">if</span> !err
+                                        socket.emit <span class="string">'update'</span>, item
+                                        socketio.<span class="keyword">of</span>(url).<span class="keyword">in</span>(item._id).emit <span class="string">'supdate'</span>, item
+                                    <span class="keyword">else</span>
+                                        socket.emit <span class="string">'update'</span>, {<span class="string">'error'</span>: <span class="number">400</span>}
+                            <span class="keyword">else</span> <span class="keyword">if</span> count <span class="keyword">is</span> <span class="number">0</span>
+                                socket.emit <span class="string">'update'</span>, {<span class="string">'error'</span>: <span class="number">404</span>}
+                            <span class="keyword">else</span>
+                                socket.emit <span class="string">'update'</span>, {<span class="string">'error'</span>: <span class="number">400</span>}
+
+                socket.<span class="literal">on</span> <span class="string">'get'</span>, (data) -&gt;
+
+                    ex.get name, data.query <span class="keyword">or</span> {}, data.options <span class="keyword">or</span> {}, (err, items) -&gt;
+                        socket.emit <span class="string">'get'</span>, items
+
+                socket.<span class="literal">on</span> <span class="string">'delete'</span>, (data) -&gt;
+
+                    ex.del name, data._id, (err) -&gt;
+
+                        socket.emit <span class="string">'delete'</span>, {}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Subscribing to entities is done by sending &#39;subscribe&#39; together with query object. The
+returned documents for the query will be subscribed to for updates.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                socket.<span class="literal">on</span> <span class="string">'subscribe'</span>, (data) -&gt;
+
+                    ex.get name, data <span class="keyword">or</span> {}, {fields: [{_id: <span class="number">1</span>}]}, (err, items) -&gt;
+                        <span class="keyword">for</span> item <span class="keyword">in</span> items
+                            socket.join item._id
+                            socket.emit <span class="string">'subscribed'</span>, item</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>The unsubscribe works the same way as the subscribe and will unsubscribe from all documents that
+fit the query object.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                socket.<span class="literal">on</span> <span class="string">'unsubscribe'</span>, (data) -&gt;
+
+                    ex.get name, data <span class="keyword">or</span> {}, {fields: [{_id: <span class="number">1</span>}]}, (err, items) -&gt;
+                        <span class="keyword">for</span> item <span class="keyword">in</span> items
+                            socket.leave item._id
+
 
     ex</pre></div></div>
             

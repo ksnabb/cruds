@@ -1,7 +1,8 @@
 
 chai = require "chai"
 should = chai.should()
-crud = require("..")()
+cr = require("..")
+cruds = cr()
 
 describe 'crud functions', () ->
 	
@@ -9,7 +10,7 @@ describe 'crud functions', () ->
 
 		it 'should create a new document', (done) ->
 
-			crud.create 'Test', {'hello': 'create'}, (err, col) ->
+			cruds.create 'Test', {'hello': 'create'}, (err, col) ->
 				should.not.exist err
 				col.should.have.keys '_id', 'hello'
 				done()
@@ -18,33 +19,33 @@ describe 'crud functions', () ->
 
 		it 'should update an existing document', (done) ->
 
-			crud.create 'Test', {'hello': 'upd'}, (err, col) ->
+			cruds.create 'Test', {'hello': 'upd'}, (err, col) ->
 				should.not.exist err
 				col.should.have.keys '_id', 'hello'
 
-				crud.update 'Test', col._id.toHexString(), {'hello': 'update'}, (err, count) ->
+				cruds.update 'Test', col._id.toHexString(), {'hello': 'update'}, (err, count) ->
 					should.not.exist err
 					count.should.equal 1
 					done()
 
 		it 'should return count 0 for updated documents if the document queried does not exist', (done) ->
 
-			crud.update 'Test', 'noidwith12bi', {'hello', 'does not exist'}, (err, count) ->
+			cruds.update 'Test', 'noidwith12bi', {'hello', 'does not exist'}, (err, count) ->
 					should.not.exist err
 					count.should.equal 0
 					done()
 
 		it 'should only update the given key value pairs', (done) ->
 
-			crud.create 'Test', {'hello': 'upd', 'do': 'not touch'}, (err, col) ->
+			cruds.create 'Test', {'hello': 'upd', 'do': 'not touch'}, (err, col) ->
 				should.not.exist err
 				col.should.have.keys '_id', 'hello', 'do'
 
-				crud.update 'Test', col._id.toHexString(), {'hello': 'update'}, (err, count) ->
+				cruds.update 'Test', col._id.toHexString(), {'hello': 'update'}, (err, count) ->
 					should.not.exist err
 					count.should.equal 1
 
-					crud.getById 'Test', col._id.toHexString(), (err, item) ->
+					cruds.getById 'Test', col._id.toHexString(), (err, item) ->
 						should.not.exist err
 						item.should.have.keys '_id', 'hello', 'do'
 						item.do.should.equal 'not touch'
@@ -55,14 +56,14 @@ describe 'crud functions', () ->
 
 		before (done) ->
 
-			crud.create 'Test', {'value': 1, 'otherkey': true}, () ->
-				crud.create 'Test', {'value': 2, 'otherkey': false}, () ->
-					crud.create 'Test', {'value': 3, 'other': true}, () ->
+			cruds.create 'Test', {'value': 1, 'otherkey': true}, () ->
+				cruds.create 'Test', {'value': 2, 'otherkey': false}, () ->
+					cruds.create 'Test', {'value': 3, 'other': true}, () ->
 						done()
 
 		it 'should return documents with value 3 when query is {"value":3}', (done) ->
 
-			crud.get 'Test', {'value': 3}, {}, (err, items) ->
+			cruds.get 'Test', {'value': 3}, {}, (err, items) ->
 				should.not.exist err
 				for item in items
 					item.should.have.property('value').with.eql 3
@@ -70,7 +71,7 @@ describe 'crud functions', () ->
 
 		it 'should return documents with value less then 3 when query is { "value": { $lt: 3 }}', (done) ->
 
-			crud.get "Test", {'value': {$lt: 3}}, {}, (err, items) ->
+			cruds.get "Test", {'value': {$lt: 3}}, {}, (err, items) ->
 				should.not.exist err
 				for item in items
 					item.should.have.property('value')
@@ -79,11 +80,11 @@ describe 'crud functions', () ->
 
 		it 'should return only the amount of documents that is set in the limit option', (done) ->
 
-			crud.get 'Test', {}, {limit: 1}, (err, items) ->
+			cruds.get 'Test', {}, {limit: 1}, (err, items) ->
 				should.not.exist err
 				items.should.have.lengthOf 1
 
-				crud.get 'Test', {}, {limit: 2}, (err, items) ->
+				cruds.get 'Test', {}, {limit: 2}, (err, items) ->
 					should.not.exist err
 					items.should.have.lengthOf 2
 					done()
@@ -92,19 +93,19 @@ describe 'crud functions', () ->
 
 		it 'should delete all the documents from the collection', (done) ->
 
-			crud.get 'Test', {}, {}, (err, items) ->
+			cruds.get 'Test', {}, {}, (err, items) ->
 				nritems = items.length
 
 				for item in items
 
-					crud.del 'Test', item._id.toHexString(), (err) ->
+					cruds.del 'Test', item._id.toHexString(), (err) ->
 
 						should.not.exist err
 
 						nritems--
 						if nritems is 0
 
-							crud.get 'Test', {}, {}, (err, items) ->
+							cruds.get 'Test', {}, {}, (err, items) ->
 								items.should.have.length(0)
 								done()
 
@@ -113,10 +114,9 @@ request = require "supertest"
 express = require "express"
 #create the application
 app = express()
+cruds.set("/testrest", "Test", app)
 
-app.use "/testrest", crud.getApp("testrest")
-
-describe 'crud REST interface', () ->
+describe 'cruds REST interface', () ->
 	
 	describe 'HTTP POST / create', () ->
 
@@ -268,7 +268,8 @@ describe 'crud REST interface', () ->
 server = require("http").createServer(app)
 io = require("socket.io").listen(server)
 io.set 'log level', 0
-crud.set "/wsrest", "wstest", app, io
+namespace = 'wsrest'
+cruds.set "/#{namespace}", "wstest", app, io
 
 server.listen(3010)
 
@@ -344,35 +345,68 @@ describe 'cruds websocket interface', () ->
 
 	describe 'subscribe', () ->
 
-		it 'should subscribe to set of entities defined by a query for updates', (done) ->
-
-			socket2 = ioclient.connect 'http://127.0.0.1:3010/wsrest'
-
+		before (done) ->
+			socket2 = ioclient.connect "http://127.0.0.1:3010/#{namespace}"
 			socket2.once 'connect', () ->
+				done()
 
-				socket2.socket.connected.should.be.true
+		beforeEach () ->
+			socket.socket.connected.should.be.true
+			socket2.socket.connected.should.be.true
 
-				#subscribe to entities with value 3
-				socket2.emit 'subscribe', {value: 3}
+		query = {value: 3}
 
-				socket2.once 'subscribed', (data) ->
+		it 'should be able to subscribe to a query', (done) ->
 
-					#event is subscribed update = supdate
-					socket2.once 'supdate', (data) ->
-						data.should.have.property 'value', 3
-						data.should.have.property 'subscribe', true
-						done()
+			socket2.once 'subscribed', () ->
 
-					socket.emit 'get', {query: {value: 3}}
+				socket2.once 'rooms', (rooms) ->
+					rooms.should.have.property "/#{namespace}/#{JSON.stringify query}"
+					done()
 
-					socket.once 'get', (data) ->
-						for d in data
-							d.subscribe = true
-							socket.emit 'update', d 
+				socket2.emit 'rooms', ''
+
+			socket2.emit 'subscribe', query
+
+		it 'should receive creates for the subscribed query', (done) ->
+
+			socket2.once 'create', (data) ->
+				data.should.have.keys 'value', '_id', 'to', 'from'
+				data.should.have.property 'value', 3
+				data.should.have.property 'from', 1
+				done()
+
+			socket.emit 'create', {value: 3, from: 1, to: 2}
+
+		it 'should receive updates for the subscribed query', (done) ->
+
+			socket2.once 'update', (data) ->
+				data.should.have.property 'update', 'update'
+				done()
+
+			socket.once 'create', (data) ->
+				data.update = 'update'
+				socket.emit 'update', data
+
+
+			socket.emit 'create', {value: 3, 'update': 'upd'}
+			
+
+		it 'should be able to unsubscribe from a query', (done) ->
+
+			socket2.once 'unsubscribed', () ->
+
+				socket2.once 'rooms', (rooms) ->
+					rooms.should.have.keys "", "/#{namespace}"
+					done()
+
+				socket2.emit 'rooms', ''
+
+			socket2.emit 'unsubscribe', query
 
 	describe 'delete', () ->
 
-		it 'should delete all the documents from the collection', (done) ->
+		it 'should delete all the documents from the collection one at the time', (done) ->
 
 			socket.emit 'get', {}
 

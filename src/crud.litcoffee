@@ -1,164 +1,211 @@
-This module provides three levels of mongodb crud functionality. Simple javascript
-functions to access mongodb, a RESTful interface for mongodb using node.js and express app,
-and a socket.io interface for crud and subscribe unsubscribe to a mongodb document.
+CRUDS
+=====
 
-The REST interface is fully compatible with backbone.js models.
+**CRUDS** aims to provide a fast and easy way to create and expose mongodb 
+collections for crud functionality through REST and websockets with optional real-time 
+subscribe and unsubscribe functionality throught the websocket interface. **CRUDS** works together with connect/express 
+applications, socket.io and backbone.js with a fully compatible REST interface.
 
-To use the module just do require("cruds")( mongodb connection string )
+_**CRUDS** is made for fast prototyping purposes do not use it as-is in a production environment_
 
-    module.exports = (mongoDbConnectionString) ->
-    
-        MongoClient = require('mongodb').MongoClient
-        ObjectID = require('mongodb').ObjectID
+1. Install with **npm** `npm install cruds`
 
-Functions to return will be created in the 'ex' variable
-    
-        ex = {}
+2. In your express app `cruds = require("cruds")(<optional mongodb connection string>)`
 
-_connect(callBack)_ is a helper funtion to connect to
+3. Set endpoints with `cruds.set(url, collection name, app?, socketio?)`
+
+    cruds = (connectionString) ->
+        mongodb = require "mongodb"
+        express = require "express"
+
+Handle module internal events with *_on* and *_trigger*.
+
+        _listeners = {}
+
+        _on = (eventType, callback) ->
+            if _listeners[eventType]
+                _listeners[eventType].push callback
+            else
+                _listeners[eventType] = [callback]
+
+        _trigger = (eventType) ->
+            list = _listeners[eventType]
+            if list
+                for listener in list
+                    args = Array.prototype.slice.call arguments
+                    listener.apply this, args
+
+__connect(callback)_ is a helper funtion to connect to
 mongodb and to cache the connection. Multiple calls to 
 connect will in this way not produce more connections
 then one call to connect. The callback function will
 receive the mongo database instance object.
 
-        mdb = null
-        listeners = []
-        connect = (callBack) ->
-            if mdb
-                callBack mdb
+        _mdb = null
+
+        _connect = (callback) ->
+            if _mdb
+                callback _mdb
                 return
             else
-                listeners.push callBack
+                _on 'connect', () ->
+                    callback arguments[1]
 
-            mongoDbConnectionString = "mongodb://localhost:27017/Entity" if not mongoDbConnectionString
-            MongoClient.connect mongoDbConnectionString,  { native_parser: true, auto_reconnect: true }, (err, db) ->
+            connectionString = "mongodb://localhost:27017/Entity" if not connectionString
+            mongodb.MongoClient.connect connectionString,  { native_parser: true, auto_reconnect: true }, (err, db) =>
                 if !err
-                    mdb = db
+                    _mdb = db
+                    _trigger 'connect', _mdb
 
-                for listener in listeners
-                    listener mdb
+
+__exists(entityName, query, callback)_ is a helper function to check if any entity exists with the given query. The callback will be called
+with true if exists and with false otherwise.
+
+        _exists = (entityName, query, callback) ->
+            _connect (mdb) ->
+                mdb.collection entityName, (err, col) ->
+                    
+                    col.find(query).limit(1).count true, (err, count) ->
+                        if count > 0
+                            callback true
+                        else
+                            callback false
+
+## CRUD functions
+
+The **CRUDS** module exposes functions to do simple crud calls to mongodb collections.
 
 ###Create an entity
 
-The function takes the following arguments
+The *create* function takes the following arguments
 
-_entityName_ - string     
-_entityValue_ - entity object     
-_callBack_ - function     
+- **name** {String}, name of entity collection   
+- **entity** {Object}, entity object  
+- **callback** {function}, callback function  
 
-        ex.create = (entityName, entityValue, callBack) ->
-            connect (mdb) ->
-                mdb.collection entityName, (err, col) ->
+        create = (name, entity, callback) ->
+            _connect (mdb) ->
+                mdb.collection name, (err, col) ->
                     if !err
-                        col.save entityValue, callBack
+                        cb = (err, item) ->
+                            callback err, item
+                            _trigger 'create', item, 'create'
+
+                        col.save entity, cb
                     else
-                        callBack err, col
+                        callback err, col
 
 ###Update an entity
 
-The update will update the queried document with the 
+The *update* function will update the queried document with the 
 key value pairs that is given in entityValue leaving all
 non mentioned key value pairs untouched. This function
 does in other words not replace the queried documents.
 
-The function takes the following arguments:
+- **name** {String}, The name of the collection to use    
+- **id** {String}, The hexadecimal representation of a mongodb ObjectID    
+- **entity** {Object}, The part of the document that should be updated    
+- **callback** {function}, callback function     
 
-_entityName_ - The name of the collection to use    
-_entityId_ - The hexadecimal representation of a mongodb ObjectID    
-_entityValue_ - The part of the document that should be updated    
-_callBack_ - function that takes two arguments error if an error occured and count which is the amount of documents that was updated     
-
-        ex.update = (entityName, entityId, entityValue, callBack) ->
-            connect (mdb) ->
-                mdb.collection entityName, (err, col) ->
+        update = (name, id, entity, callback) ->
+            _connect (mdb) ->
+                mdb.collection name, (err, col) ->
                     if !err
-                        delete entityValue._id
-                        col.update {"_id": new ObjectID(entityId)}, {$set: entityValue}, (err, count) ->
-                            callBack err, count
+                        delete entity._id
+                        oid = new mongodb.ObjectID(id)
+                        col.update {"_id": oid}, {$set: entity}, (err, count) =>
+                            callback err, count
+                            entity._id = oid
+                            _trigger 'update', entity, 'update'
                     else
-                        callBack err, col
+                        callback err, col
 
 ###Query entities
 
 There are two function to query entities. One takes
-and arbitrary mongodb json formated query _get()_ and 
-the other returns one item by it's id _getById()_.
+and arbitrary mongodb json formated query *get* and 
+the other returns one document according to its id *getById*.
  
-The get function takes the following parameters:
+The get function takes the following arguments:
 
-_entityName_ - name of entity collection  
-_query_ - mongodb query  
-_options_ - mongodb node.js driver options  
-_callBack_ - callback function  
+- **name** {String}, name of entity collection  
+- **query** {Object}, mongodb query  
+- **options** {Object}, mongodb node.js driver options  
+- **callback** {function}, callback function  
 
-        ex.get = (entityName, query, options, callBack) ->
+        get = (name, query, options, callback) ->
 
-            connect (mdb) ->
-                mdb.collection entityName, (err, col) ->
+            _connect (mdb) ->
+                mdb.collection name, (err, col) ->
                     if !err
                         col.find query, options or {}, (err, cursor) ->
                             if !err
                                 cursor.toArray (err, items) ->
-                                    callBack err, items
+                                    callback err, items
                             else
-                                callBack err, cursor
+                                callback err, cursor
                     else
-                        callBack err, col
+                        callback err, col
 
-The _getById_ function returns one item from mongodb
-and it takes the following parameters:
+The *getById* function returns one item from mongodb
+and it takes the following arguments:
 
-_entityName_ - name of entity collection  
-_id_ - id in OjectId hex representation  
-_callBack_ - The callback function that gets error object and item as parameters  
+- **name** {String}, name of entity collection  
+- **id** {String}, id in ObjectId hex representation  
+- **callback** {function}, callback function 
 
-        ex.getById = (entityName, id, callBack) ->
-            connect (mdb) ->
-                mdb.collection entityName, (err, col) ->
+        getById = (name, id, callback) ->
+            _connect (mdb) ->
+                mdb.collection name, (err, col) ->
                     if !err
-                        col.findOne {"_id": new ObjectID(id)}, (err, item) ->
+                        col.findOne {"_id": new mongodb.ObjectID(id)}, (err, item) ->
                             if !item
-                                callBack err, {}
+                                callback err, {}
                             else
-                                callBack err, item
+                                callback err, item
                     else
-                        callBack err, col
+                        callback err, col
 
 ### Delete entities
 
 The del function deletes one entity
 
-_entityName_ - name of entity collection  
-_id_ - id in hex  
-_callBack_ - callback that gets an error object as parameter  
+- **name** {String}, name of entity collection  
+- **id** {String}, id in hex  
+- **callback** {function}, callback function
     
-        ex.del = (entityName, id, callBack) ->
-            connect (mdb) ->
-                mdb.collection entityName, (err, col) ->
+        del = (name, id, callback) ->
+            _connect (mdb) ->
+                mdb.collection name, (err, col) ->
                     if !err
-                        col.remove {"_id": new ObjectID(id)}, (err) ->
-                            callBack err
+                        _trigger 'delete', {"_id": id}, 'delete'
+                        col.remove {"_id": new mongodb.ObjectID(id)}, (err) ->
+                            callback err
                     else
-                        callBack err, col
+                        callback err, col
 
 
 ### Request listener application
 
-The following module.export returns an express app
-that provides the REST interface for an Entity
+The *getApp* method returns and express app that provides
+a RESTful interface for the collection with the given name.
 
-        ex.getApp = (name) ->
-            express = require('express')
+        getApp = (name) ->
             app = express()
 
-The application requires json parser or bodyparser middleware to work.
+All messages from and to the RESTful interface are in JSON format and are parsed with the 
+bodyParser middleware.
 
             app.use express.bodyParser()
 
-The GET parameters are parsed with the help of the parseQuery function.
-The URI request can have the following parameters:
-_query_ - Stringified JSON object that is passed directly to mongodb find as query parameter  
-_options_ - Stringified JSON object that is the options for nodejs mongodb driver find function  
+#### URL parameters
+
+The url parameters are parsed with the help of the parseQuery function.
+
+The URI request takes the following parameters
+
+- **query**, Stringified JSON object that is passed directly to mongodb find as a query parameter  
+- **options**, Stringified JSON object that is passed to the mongodb node.js find function as the options parameter  
 
             parseQuery = (requestParam) ->
                 query = {} #default
@@ -168,56 +215,64 @@ _options_ - Stringified JSON object that is the options for nodejs mongodb drive
 
                 {query: query, options: options}
 
-Query items by sending query parameters as defined above to the root of the REST interface.
+#### HTTP GET
+
+Query items by sending query parameters as defined above to the root "/" of the REST interface.
 
             app.get '/', (req, res) ->
     
                 q = parseQuery req.query
         
-                ex.get name, q.query, q.options, (err, items) ->
+                get name, q.query, q.options, (err, items) ->
                     if err
                         res.send 400, "something went wrong"
                     else
                         res.send items
       
-Get a single item by sending a GET request to the items url
+Get a single item by sending a GET request to the items url "/:id"
 
             app.get '/:id', (req, res) ->
 
-                ex.getById name, req.param('id'), (err, item) ->
+                getById name, req.param('id'), (err, item) ->
                     if !err
                         res.send item
                     else
                         res.send 400, 'Something went wrong!'
-              
-Post to create a entity. The JSON object of the entity is sent in request body
+
+#### HTTP Post
+
+Post to "/" to create a entity. The JSON object of the entity is sent in request body
 
             app.post '/', (req, res) ->
 
-                ex.create name, req.body, (err, item) ->
+                create name, req.body, (err, item) ->
                     if !err
                         res.send item
                     else 
                         res.send 400, 'Something went wrong!'
-    
-Delete item by sending http delete to the entity url
+
+#### HTTP DELETE
+
+Delete item by sending http delete to the entity url "/:id"
 
             app.del '/:id', (req, res) ->
 
-                ex.del name, req.param('id'), (err) ->
+                del name, req.param('id'), (err) ->
                     if !err
                         res.send {}
                     else
                         res.send 400, "Something went wrong!"
-    
-To update send the new values in request body to the entity url
+
+#### HTTP PUT
+
+To update send the new values in request body to the entity url "/:id"
 
             app.put '/:id', (req, res) ->
 
-                ex.update name, req.param('id'), req.body, (err, count) ->
+                update name, req.param('id'), req.body, (err, count) ->
 
                     if !err and count is 1
-                        ex.getById name, req.param('id'), (err, item) ->
+                        getById name, req.param('id'), (err, item) ->
                             if !err
                                 res.send item
                             else
@@ -230,93 +285,156 @@ To update send the new values in request body to the entity url
             app
 
 
-### Set up of url endpoints
+### Setup of url endpoints for REST and websockets
 
 To be able to set up both a RESTful interface and a websocket interface 
-the _set_ method can be used. 
+the *set* method can be used. 
 
-_url_ - endpoint for the request  
-_name_ - name of the entity to use for saving to the database  
-_app_ - Express application  
-_socketio_ - Socket.io that is set up to listen to a node.js httpserver  
+- **url** {String}, endpoint for the request  
+- **name** {String}, name of the entity to use for saving to the database  
+- **app** {Object}, Express application  
+- **socketio** {Object}, Socket.io Server that is set up to listen to a node.js httpserver  
         
-        ex.set = (url, name, app, socketio) ->
+        set = (url, name, app, socketio) ->
 
-Set up the REST interface using getApp
+If the app is passed as null or undefined a REST interface will not be setup.
 
-            app.use url, ex.getApp(name)
+            if app
+                app.use url, getApp(name)
+
+Socket.io rooms are used to handle subscriptions to queries. The handler function
+handles create and update events.
+
+            handler = (eventType, item) ->
+                rooms = socketio.sockets.manager.rooms
+
+                for roomid, sockets of rooms
+                    spl = roomid.split("/")
+                    query = spl[spl.length - 1]
+
+                    query._id = item._id
+
+                    _exists name, query, (bool) ->
+                        if bool
+                            socketio.of(url)
+                                .in(query)
+                                .emit eventType, item
 
 Set up the websocket interface and provide the same REST methods _get_, _create_, _update_, _delete_, _subscribe_ and _unsubscribe_.
 
-            socketio
-                .of(url)
-                .on 'connection', (socket) ->
+            if socketio
+                _on 'create', handler
+                _on 'update', handler
+
+                socketio
+                    .of(url)
+                    .on 'connection', (socket) ->
+
+#### socket.io create
 
 Create documents by sending 'create' message together with a JSON object.
 
-                    socket.on 'create', (data) ->
+                        socket.on 'create', (data) ->
 
-                        ex.create name, data, (err, item) ->
-                            if !err
-                                socket.emit 'create', data
-                            else 
-                                socket.emit 'create', {'error': 400}
+                            create name, data, (err, item) ->
+                                if !err
+                                    socket.emit 'create', data
+                                else 
+                                    socket.emit 'create', {'error': 400}
+
+#### socket.io udpate
 
 Update a document by sending a 'update' message with an object including and '_id' and the
 key values to be updated.
 
-                    socket.on 'update', (data) ->
+                        socket.on 'update', (data) ->
 
-                        id = data._id
-                    
-                        if not id
-                            socket.emit {'error': 400}
-                        else
-                            ex.update name, id, data, (err, count) ->
+                            id = data._id
+                        
+                            if not id
+                                socket.emit {'error': 400}
+                            else
+                                update name, id, data, (err, count) ->
 
-                                if !err and count is 1
-                                    ex.getById name, id, (err, item) ->
-                                        if !err
-                                            socket.emit 'update', item
-                                            socketio.of(url).in(item._id).emit 'supdate', item
-                                        else
-                                            socket.emit 'update', {'error': 400}
-                                else if count is 0
-                                    socket.emit 'update', {'error': 404}
-                                else
-                                    socket.emit 'update', {'error': 400}
+                                    if !err and count is 1
+                                        getById name, id, (err, item) ->
+                                            if !err
+                                                socket.emit 'update', item
+                                                socketio.of(url).in(item._id).emit 'supdate', item
+                                            else
+                                                socket.emit 'update', {'error': 400}
+                                    else if count is 0
+                                        socket.emit 'update', {'error': 404}
+                                    else
+                                        socket.emit 'update', {'error': 400}
 
-                    socket.on 'get', (data) ->
+#### socket.io get
 
-                        ex.get name, data.query or {}, data.options or {}, (err, items) ->
-                            socket.emit 'get', items
+Query documents by sending an object with *query* and *options* key value pairs.
 
-                    socket.on 'delete', (data) ->
+- **query** {Object}, mongodb query object
+- **options** {Object}, mongodb options object
 
-                        ex.del name, data._id, (err) ->
+                        socket.on 'get', (data) ->
 
-                            socket.emit 'delete', {}
+                            get name, data.query or {}, data.options or {}, (err, items) ->
+                                socket.emit 'get', items
 
-Subscribing to entities is done by sending 'subscribe' together with query object. The
-returned documents for the query will be subscribed to for updates.
+#### Socket.io delete
 
-                    socket.on 'subscribe', (data) ->
+Delete item by sending an object with the items _id.
 
-                        ex.get name, data or {}, {fields: [{_id: 1}]}, (err, items) ->
-                            for item in items
-                                socket.join item._id
-                                socket.emit 'subscribed', item
+                        socket.on 'delete', (data) ->
+
+                            del name, data._id, (err) ->
+                                socket.emit 'delete', {}
+
+#### Socket.io subscribe
+
+Subscribing to entities is done by passing a mongodb query. The socket will
+get notifications of events that are returned by the query. The subscription also
+handles sending notifications about creation of new documents that fit the query.
+
+                        socket.on 'subscribe', (query) ->
+
+                            socket.join JSON.stringify query
+                            socket.emit 'subscribed', ''
+
+
+#### Socket.io unsubscribe
 
 The unsubscribe works the same way as the subscribe and will unsubscribe from all documents that
 fit the query object.
 
-                    socket.on 'unsubscribe', (data) ->
+                        socket.on 'unsubscribe', (query) ->
 
-                        ex.get name, data or {}, {fields: [{_id: 1}]}, (err, items) ->
-                            for item in items
-                                socket.leave item._id
+                            socket.leave JSON.stringify query
+                            socket.emit 'unsubscribed', ''
 
 
-        ex
+#### Socket.io rooms
+
+To get a list of all rooms currently subscribed to the client can send a getrooms message.
+
+                        socket.on 'rooms', () ->
+                            rooms = socketio.sockets.manager.roomClients[socket.id]
+                            socket.emit 'rooms', rooms
+
+
+### Exposed functions
+
+The CRUDS will expose the following methods.
+
+        {'set': set,
+        'getApp': getApp,
+        'create': create,
+        'update': update,
+        'get': get,
+        'del': del,
+        'getById': getById
+        }
+
+
+    module.exports = cruds
 
   

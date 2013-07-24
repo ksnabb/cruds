@@ -2,7 +2,7 @@
   "name": "cruds",
   "version": "0.0.4",
   "private": false,
-  "main": "lib/crud.js",
+  "main": "lib/cruds.js",
   "dependencies": {
     "express": "3.0.4",
     "socket.io": "*",
@@ -16,7 +16,7 @@
     "socket.io-client": "*",
     "docco": "*"
   },
-  "description": "Easy CRUD with mongodb and node.js. Source code and documentation can be found at github https://github.com/ksnabb/crud",
+  "description": "Easy CRUD with mongodb and node.js. Source code and documentation can be found at github https://github.com/ksnabb/cruds",
   "directories": {
     "lib": "lib",
     "doc": "docs",
@@ -27,11 +27,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ksnabb/crud.git"
+    "url": "https://github.com/ksnabb/cruds.git"
   },
   "keywords": [
     "crud",
     "rest",
+    "real-time",
     "websockets"
   ],
   "author": "Kristoffer Snabb",

@@ -1,6 +1,8 @@
 CRUDS
 =====
 
+[![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=master)](https://travis-ci.org/ksnabb/cruds)
+
 **CRUDS** aims to provide a fast and easy way to create and expose mongodb 
 collections for crud functionality through REST and websockets with optional real-time 
 subscribe and unsubscribe functionality throught the websocket interface. **CRUDS** works together with connect/express 

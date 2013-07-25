@@ -5,8 +5,11 @@ CRUDS
 
 **CRUDS** aims to provide a fast and easy way to create and expose mongodb 
 collections for crud functionality through REST and websockets with optional real-time 
-subscribe and unsubscribe functionality throught a websocket interface. **CRUDS** depends on express and socket.io to create
-the REST and Websocket endpoints. The REST is fully compatible with backbone.js models.
+subscribe and unsubscribe functionality throught a websocket interface.
+
+**CRUDS** depends on [express](http://expressjs.com) and [socket.io](http://socket.io) to create
+the REST and Websocket endpoints. The REST is fully compatible with [backbone.js](http://backbonejs.org) models.
+All code is released under the MIT license and can be found on [github](http://github.com/ksnabb/cruds)
 
 1. Install with **npm** `npm install cruds`
 

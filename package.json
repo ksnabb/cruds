@@ -1,22 +1,22 @@
 {
   "name": "cruds",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "main": "lib/cruds.js",
   "dependencies": {
-    "express": "3.0.4",
+    "express": "*", 
     "socket.io": "*",
     "mongodb": "*"
   },
   "devDependencies": {
     "coffee-script": "*",
-    "mocha": "1.12.0",
+    "mocha": "*",
     "chai": "*",
     "supertest": "*",
     "socket.io-client": "*",
     "docco": "*"
   },
-  "description": "Easy CRUD with mongodb and node.js. Source code and documentation can be found at github https://github.com/ksnabb/cruds",
+  "description": "Easy CRUD + SUBSCRIBE with mongodb and node.js.",
   "directories": {
     "lib": "lib",
     "doc": "docs",

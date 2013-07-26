@@ -31,12 +31,12 @@ Handle module internal events with *_on* and *_trigger*.
             else
                 _listeners[eventType] = [callback]
 
-        _trigger = (eventType) ->
+        _trigger = (eventType, args...) ->
             list = _listeners[eventType]
             if list
                 for listener in list
-                    args = Array.prototype.slice.call arguments
-                    listener.apply this, args
+                    args.unshift eventType
+                    listener args...
 
 __connect(callback)_ is a helper funtion to connect to
 mongodb and to cache the connection. Multiple calls to 
@@ -51,7 +51,7 @@ receive the mongo database instance object.
                 callback _mdb
                 return
             else
-                _on 'connect', () ->
+                _on 'connect', ->
                     callback arguments[1]
 
             connectionString = "mongodb://localhost:27017/Entity" if not connectionString
@@ -116,7 +116,7 @@ does in other words not replace the queried documents.
                     if !err
                         delete entity._id
                         oid = new mongodb.ObjectID(id)
-                        col.update {"_id": oid}, {$set: entity}, (err, count) =>
+                        col.update {"_id": oid}, {$set: entity}, (err, count) ->
                             callback err, count
                             entity._id = oid
                             _trigger 'update', entity, 'update'
@@ -419,7 +419,7 @@ fit the query object.
 
 To get a list of all rooms currently subscribed to the client can send a getrooms message.
 
-                        socket.on 'rooms', () ->
+                        socket.on 'rooms', ->
                             rooms = socketio.sockets.manager.roomClients[socket.id]
                             socket.emit 'rooms', rooms
 
@@ -428,14 +428,13 @@ To get a list of all rooms currently subscribed to the client can send a getroom
 
 The CRUDS will expose the following methods.
 
-        {'set': set,
-        'getApp': getApp,
-        'create': create,
-        'update': update,
-        'get': get,
-        'del': del,
-        'getById': getById
-        }
+        set: set
+        getApp: getApp
+        create: create
+        update: update
+        get: get
+        del: del
+        getById: getById
 
 
     module.exports = cruds

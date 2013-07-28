@@ -310,14 +310,15 @@ handles create and update events.
                         q = JSON.parse query
                         q._id = item._id
 
-                        ((namespace, query, item, instance) ->
+                        ((namespace, eventType, query, item, instance) ->
                             instance.exists q, (bool) ->
 
                                 if bool
                                     socketio.of(namespace)
                                         .in(query)
                                         .emit eventType, item
-                            )(namespace, query, item, this)
+
+                        )(namespace, eventType, query, item, @)
 
                 @on 'create', handler
                 @on 'update', handler
@@ -325,6 +326,7 @@ handles create and update events.
                 socketio
                     .of(namespace)
                     .on 'connection', (socket) =>
+
 
 #### socket.io create
 
@@ -356,7 +358,6 @@ key values to be updated.
                                         @getById id, (err, item) ->
                                             if !err
                                                 socket.emit 'update', item
-                                                socketio.of(namespace).in(item._id).emit 'update', item
                                             else
                                                 socket.emit 'update', {'error': 400}
                                     else if count is 0
@@ -391,8 +392,9 @@ Subscribing to entities is done by passing a mongodb query. The socket will
 get notifications of events that are returned by the query. The subscription also
 handles sending notifications about creation of new documents that fit the query.
 
-                        socket.on 'subscribe', (query) ->
+**NOTE!** *Subscribing also means that the client doing updates and creates will receive notifications.*
 
+                        socket.on 'subscribe', (query) ->
                             socket.join JSON.stringify query
                             socket.emit 'subscribed', ''
 
@@ -415,6 +417,14 @@ To get a list of all rooms currently subscribed to the client can send a getroom
                         socket.on 'rooms', ->
                             rooms = socketio.sockets.manager.roomClients[socket.id]
                             socket.emit 'rooms', rooms
+
+The disconnect event cleans up the mess.
+
+                        socket.on 'disconnect', ->
+                            console.log 'disconnect received'
+                            console.log Object.keys socket
+                            console.log socketio.sockets.manager.roomClients[socket.id]
+                            socket.removeAllListeners()
 
 
 

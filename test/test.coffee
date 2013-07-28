@@ -269,7 +269,7 @@ server = require("http").createServer(app)
 io = require("socket.io").listen server
 io.set 'log level', 0
 namespace = "wsrest"
-cruds.set namespace, app, io
+cruds.set namespace, null, io
 
 server.listen(3010)
 

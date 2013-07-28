@@ -15,7 +15,10 @@ All code is released under the MIT license and can be found on [github](http://g
 
 2. In your express app `cruds = require("cruds")(<optional mongodb connection string>)`
 
-3. Set endpoints with `cruds.set(url, collection name, app?, socketio?)`
+3. Set endpoints with `cruds.set(name, app?, socketio?)`
+
+The 'cruds.set' function will create either socket.io namespace for the passed in name and/or a REST interface 
+for '/name'
 
     cruds = (connectionString) ->
         mongodb = require "mongodb"
@@ -77,13 +80,6 @@ with true if it exists and with false otherwise.
 
                         td.count true, (err, count) ->
                             callback count is 1
-                        #callback td?               
-
-                        #col.find(query).limit(1).count true, (err, count) ->
-                        #    if count > 0
-                        #        callback true
-                        #    else
-                        #        callback false
 
 ## CRUD functions
 
@@ -92,10 +88,9 @@ The **CRUDS** module exposes functions to do simple crud calls to mongodb collec
 ###Create an entity
 
 The *create* function takes the following arguments
-
-- **name** {String}, name of entity collection   
-- **doc** {Object}, entity mongodb document 
-- **callback** {function}, callback function  
+ 
+- **doc** {Object}, The mongodb document to be created
+- **callback** {function}, callback function
 
             create: (doc, callback) ->
 
@@ -113,11 +108,9 @@ The *create* function takes the following arguments
 ###Update an entity
 
 The *update* function will update the queried document with the 
-key value pairs that is given in entityValue leaving all
-non mentioned key value pairs untouched. This function
-does in other words not replace the queried documents.
-
-- **name** {String}, The name of the collection to use    
+key value pairs that is given as an argument leaving all
+non mentioned key value pairs untouched.
+  
 - **id** {String}, The hexadecimal representation of a mongodb ObjectID    
 - **doc** {Object}, The part of the document that should be updated    
 - **callback** {function}, callback function     
@@ -137,13 +130,12 @@ does in other words not replace the queried documents.
 
 ###Query entities
 
-There are two function to query entities. One takes
+There are two functions to query entities. One takes
 and arbitrary mongodb json formated query *get* and 
 the other returns one document according to its id *getById*.
  
 The get function takes the following arguments:
 
-- **name** {String}, name of entity collection  
 - **query** {Object}, mongodb query  
 - **options** {Object}, mongodb node.js driver options  
 - **callback** {function}, callback function  
@@ -165,7 +157,6 @@ The get function takes the following arguments:
 The *getById* function returns one item from mongodb
 and it takes the following arguments:
 
-- **name** {String}, name of entity collection  
 - **id** {String}, id in ObjectId hex representation  
 - **callback** {function}, callback function 
 
@@ -183,9 +174,8 @@ and it takes the following arguments:
 
 ### Delete entities
 
-The del function deletes one entity
+The del function deletes one entity at the time
 
-- **name** {String}, name of entity collection  
 - **id** {String}, id in hex  
 - **callback** {function}, callback function
     
@@ -432,7 +422,7 @@ To get a list of all rooms currently subscribed to the client can send a getroom
 ### Setup of url endpoints for REST and websockets
 
 To be able to set up both a RESTful interface and a websocket interface 
-the *set* method can be used. 
+the *set* method can be used.
 
 - **name** {String}, name of the entity and endpoint url. e.g. if name is 'user' the url will be '/user' 
 - **app** {Object}, Express application  

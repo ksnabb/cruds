@@ -10,47 +10,40 @@ describe 'crud functions',  ->
 
 		it 'should create a new document', (done) ->
 
-			entity.create {'hello': 'create'}, (err, col) ->
+			entity.create {'hello': 'create'}, (err, results) ->
 				should.not.exist err
-				col.should.have.keys '_id', 'hello'
+				results.should.have.length 1
+				for result in results
+					id = result._id
+					should.exist id
 				done()
 
 	describe 'update',  ->
 
 		it 'should update an existing document', (done) ->
 
-			entity.create {'hello': 'upd'}, (err, col) ->
+			entity.create {'hello': 'upd'}, (err, results) ->
 				should.not.exist err
-				col.should.have.keys '_id', 'hello'
 
-				entity.update col._id.toHexString(), {'hello': 'update'}, (err, count) ->
+				entity.update results[0]._id.toHexString(), {'hello': 'update'}, (err, doc) ->
 					should.not.exist err
-					count.should.equal 1
-					done()
-
-		it 'should return count 0 for updated documents if the document queried does not exist', (done) ->
-
-			entity.update 'noidwith12bi', {'hello', 'does not exist'}, (err, count) ->
-					should.not.exist err
-					count.should.equal 0
+					doc.should.have.keys '_id', 'hello'
+					doc.should.have.property 'hello', 'update'
 					done()
 
 		it 'should only update the given key value pairs', (done) ->
 
-			entity.create {'hello': 'upd', 'do': 'not touch'}, (err, col) ->
+			entity.create {'hello': 'upd', 'do': 'not touch'}, (err, results) ->
 				should.not.exist err
-				col.should.have.keys '_id', 'hello', 'do'
+				results[0].should.have.keys '_id', 'hello', 'do'
+				result = results[0]
+				should.exist result._id
 
-				entity.update col._id.toHexString(), {'hello': 'update'}, (err, count) ->
+				entity.update result._id.toHexString(), {'hello': 'update'}, (err, doc) ->
 					should.not.exist err
-					count.should.equal 1
-
-					entity.getById col._id.toHexString(), (err, item) ->
-						should.not.exist err
-						item.should.have.keys '_id', 'hello', 'do'
-						item.do.should.equal 'not touch'
-						item.hello.should.equal 'update'
-						done()
+					doc.should.have.keys '_id', 'hello'
+					doc.hello.should.equal 'update'
+					done()
 
 	describe 'get',  ->
 
@@ -125,10 +118,10 @@ describe 'cruds REST interface',  ->
 			request(app)
 				.post("/test")
 				.send({'hello': 'create'})
-				.expect(200)
+				.expect(201)
 				.end (err, res) ->
 					should.not.exist err
-					res.body.should.have.keys 'hello', '_id'
+					res.body.should.have.keys '_id'
 					done()
 
 	describe 'HTTP PUT / update',  ->
@@ -138,20 +131,26 @@ describe 'cruds REST interface',  ->
 			request(app)
 				.post("/test")
 				.send({'hello': 'upd'})
+				.expect(201)
 				.end (err, res) ->
 					should.not.exist err
-					res.body.should.have.keys '_id', 'hello'
-					res.body.should.have.property 'hello', 'upd'
+					id = res.body._id
 
 					request(app)
-						.put("/test/#{res.body._id}")
+						.put("/test/#{id}")
 						.send({'hello': 'update'})
 						.expect(200)
 						.end (err, res) ->
 							should.not.exist err
-							res.body.should.have.keys '_id', 'hello'
-							res.body.should.have.property 'hello', 'update'
-							done()
+							res.body.should.eql {}
+
+							request(app)
+								.get("/test/#{id}")
+								.expect(200)
+								.end (err, res) ->
+									res.body.should.have.keys '_id', 'hello'
+									res.body.should.have.property 'hello', 'update'
+									done()
 
 		it 'should return 404 not found if the document queried does not exist', (done) ->
 
@@ -166,20 +165,27 @@ describe 'cruds REST interface',  ->
 			request(app)
 				.post("/test")
 				.send({'hello': 'upd', 'do': 'not touch'})
-				.expect(200)
+				.expect(201)
 				.end (err, res) ->
-					should.not.exist err
+
+					id = res.body._id
 
 					request(app)
-						.put("/test/#{res.body._id}")
+						.put("/test/#{id}")
 						.send({'hello': 'update'})
 						.expect(200)
 						.end (err, res) ->
 							should.not.exist err
-							res.body.should.have.keys '_id', 'hello', 'do'
-							res.body.do.should.equal 'not touch'
-							res.body.hello.should.equal 'update'
-							done()
+							res.body.should.eql {}
+
+							request(app)
+								.get("/test/#{id}")
+								.expect(200)
+								.end (err, res) ->
+									res.body.should.have.keys '_id', 'hello', 'do'
+									res.body.do.should.equal 'not touch'
+									res.body.hello.should.equal 'update'
+									done()
 
 	describe 'HTTP GET / get',  ->
 
@@ -284,7 +290,7 @@ describe 'cruds websocket interface', ->
 		it 'should create a new document', (done) ->
 
 			socket.once 'create', (data) ->
-				data.should.have.keys '_id', 'hello'
+				data.should.have.keys '_id'
 				done()
 
 			socket.emit 'create', {'hello': 'create'}
@@ -296,13 +302,15 @@ describe 'cruds websocket interface', ->
 			socket.emit 'create', {'hello': 'upd'}
 
 			socket.once 'create', (data) ->
-				data.should.have.keys '_id', 'hello'
+				data.should.have.keys '_id'
 
 				socket.emit 'update', {'hello': 'update', '_id': data._id}
 
-				socket.once 'update', (data) ->
-					data.should.have.keys '_id', 'hello'
-					data.should.have.property 'hello', 'update'
+				socket.emit 'get', {query: {'_id': data._id}}
+
+				socket.once 'get', (data) ->
+					data[0].should.have.keys '_id', 'hello'
+					data[0].should.have.property 'hello', 'update'
 					done()
 
 	describe 'get',  ->
@@ -310,26 +318,19 @@ describe 'cruds websocket interface', ->
 		before (done) ->
 
 			socket.emit 'create', {'value': 1}
-
 			socket.once 'create', (data) ->
-				data.should.have.keys '_id', 'value'
 
 				socket.emit 'create', {'value': 2}
-
 				socket.once 'create', (data) ->
-					data.should.have.keys '_id', 'value'
 
 					socket.emit 'create', {'value': 3}
-
 					socket.once 'create', (data) ->
-						data.should.have.keys '_id', 'value'
 						done()
 
 
 		it 'should return documents with value 3 when query is {"value": 3}', (done) ->
 
 			socket.emit 'get', {query: {value: 3}}
-
 			socket.once 'get', (data) ->
 				for item in data
 					item.should.have.property('value').with.eql 3
@@ -351,23 +352,21 @@ describe 'cruds websocket interface', ->
 
 		it 'should be able to subscribe to a query', (done) ->
 
-			socket2.once 'subscribed',  ->
-
-				socket2.once 'rooms', (rooms) ->
-					rooms.should.have.property "/#{namespace}/#{JSON.stringify query}"
-					done()
-
-				socket2.emit 'rooms', ''
+			socket2.once 'rooms', (rooms) ->
+				rooms.should.have.property "/#{namespace}/#{JSON.stringify query}"
+				done()
 
 			socket2.emit 'subscribe', query
+
+			socket2.emit 'rooms', ''
 
 		it 'should receive creates for the subscribed query', (done) ->
 
 			socket2.once 'create', (data) ->
-				data.should.have.keys 'value', '_id', 'to', 'from'
-				data.should.have.property 'value', 3
-				data.should.have.property 'from', 1
+				data.should.have.keys '_id', 'value', 'from', 'to'
 				done()
+
+			socket2.emit 'subscribe', query
 
 			socket.emit 'create', {value: 3, from: 1, to: 2}
 
@@ -381,68 +380,57 @@ describe 'cruds websocket interface', ->
 				data.update = 'update'
 				socket.emit 'update', data
 
-
+			socket2.emit 'subscribe', query
 			socket.emit 'create', {value: 3, 'update': 'upd'}
 			
 
 		it 'should be able to unsubscribe from a query', (done) ->
 
-			socket2.once 'unsubscribed',  ->
 
-				socket2.once 'rooms', (rooms) ->
-					rooms.should.have.keys "", "/#{namespace}"
-					done()
-
-				socket2.emit 'rooms', ''
+			socket2.once 'rooms', (rooms) ->
+				rooms.should.have.keys "", "/#{namespace}"
+				done()
 
 			socket2.emit 'unsubscribe', query
+			socket2.emit 'rooms', ''
 
 		it 'should be able to create a duplex connection between client sockets', (done) ->
 
-			socket.once 'subscribed', ->
+			socket2.once 'create', (data) ->
+				data.should.have.property 'to', 'socket2'
+				data.should.have.property 'from', 'socket'
 
-				socket2.once 'subscribed', ->
+				socket.once 'create', (data) ->
+					data.should.have.property 'to', 'socket'
+					data.should.have.property 'from', 'socket2'
 
-					socket2.once 'create', (data) ->
-						data.should.have.property 'to', 'socket2'
-						data.should.have.property 'from', 'socket'
+					done()
 
-						socket.once 'create', (data) ->
-							data.should.have.property 'to', 'socket'
-							data.should.have.property 'from', 'socket2'
+				socket2.emit 'create', {from: 'socket2', to: 'socket'}
 
-							done()
-
-						socket2.emit 'create', {from: 'socket2', to: 'socket'}
-
-					socket.emit 'create', {from: 'socket', to: 'socket2'}
-
-				socket2.emit 'subscribe', {to: 'socket2'}
-
+			socket2.emit 'subscribe', {to: 'socket2'}
 			socket.emit 'subscribe', {to: 'socket'}
+
+			socket.emit 'create', {from: 'socket', to: 'socket2'}
 
 
 	describe 'delete',  ->
 
 		it 'should delete all the documents from the collection one at the time', (done) ->
 
-			socket.emit 'get', {}
-
 			socket.once 'get', (data) ->
-				nritems = data.length
-
-				socket.on 'delete',  ->
-					nritems--
-					if nritems is 0
-
-						socket.emit 'get', {}
-
-						socket.on 'get', (data) ->
-							data.should.have.length 0
-							done()
 
 				for item in data
 					socket.emit 'delete', {_id: item._id}
+
+				socket.emit 'get', {}
+
+				socket.on 'get', (data) ->
+					data.should.have.length 0
+					done()
+
+
+			socket.emit 'get', {}
 
 
 

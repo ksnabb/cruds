@@ -90,18 +90,22 @@ The **CRUDS** module exposes functions to do simple crud calls to mongodb collec
 The *create* function takes the following arguments
  
 - **doc** {Object}, The mongodb document to be created
-- **callback** {function}, callback function
+- **[source]** {Object}, Optional source of the caller of this function
+- **[callback]** {function}, Optional callback function
 
-            create: (doc, callback) ->
+            create: (doc, args...) ->
+
+                callback = args.pop() or () ->
+                source = if args.length then args.shift() else null
 
                 _connect (mdb) =>
                     mdb.collection @name, (err, col) =>
                         if !err
-                            cb = (err, item) =>
-                                callback err, item
-                                @trigger 'create', item
+                            cb = (err, results) =>
+                                callback err, results, source
+                                @trigger 'create', results, source
 
-                            col.save doc, cb
+                            col.insert doc, cb
                         else
                             callback err, col
 
@@ -112,19 +116,27 @@ key value pairs that is given as an argument leaving all
 non mentioned key value pairs untouched.
   
 - **id** {String}, The hexadecimal representation of a mongodb ObjectID    
-- **doc** {Object}, The part of the document that should be updated    
-- **callback** {function}, callback function     
+- **doc** {Object}, The part of the document that should be updated
+- **[source]** {Object}, Optional source of the caller of this function
+- **[callback]** {function}, callback function     
 
-            update: (id, doc, callback) ->
+            update: (id, doc, args...) ->
+
+                callback = args.pop() or () ->
+                source = if args.length then args.shift() else null
+
                 _connect (mdb) =>
                     mdb.collection @name, (err, col) =>
                         if !err
                             delete doc._id
                             oid = new mongodb.ObjectID(id)
                             col.update {"_id": oid}, {$set: doc}, (err, count) =>
-                                callback err, count
-                                doc._id = oid
-                                @trigger 'update', doc
+                                if count is 0
+                                    callback {'error': 404}
+                                else
+                                    doc._id = oid
+                                    callback err, doc, source
+                                    @trigger 'update', [doc], source
                         else
                             callback err, col
 
@@ -180,6 +192,10 @@ The del function deletes one entity at the time
 - **callback** {function}, callback function
     
             del: (id, callback) ->
+
+                if not callback
+                    callback = () ->
+
                 _connect (mdb) =>
                     mdb.collection @name, (err, col) =>
                         if !err
@@ -247,15 +263,15 @@ Get a single item by sending a GET request to the items url "/:id"
 
 #### HTTP Post
 
-Post to "/" to create a entity. The JSON object of the entity is sent in request body
+Post to "/" to create a entity. The POST will return the id of the newly created entity.
 
                 app.post '/', (req, res) =>
 
-                    @create req.body, (err, item) ->
+                    @create req.body, (err, results) ->
                         if !err
-                            res.send item
+                            res.json 201, {_id: results[0]._id}
                         else 
-                            res.send 400, 'Something went wrong!'
+                            res.json 400, {error: 'Creating the document did not work!'}
 
 #### HTTP DELETE
 
@@ -275,18 +291,11 @@ To update send the new values in request body to the entity url "/:id"
 
                 app.put '/:id', (req, res) =>
 
-                    @update req.param('id'), req.body, (err, count) =>
-
-                        if !err and count is 1
-                            @getById req.param('id'), (err, item) ->
-                                if !err
-                                    res.send item
-                                else
-                                    res.send 400, 'Something went wrong!'
-                        else if count is 0
-                            res.send 404
+                    @update req.param('id'), req.body, (err, doc) =>
+                        if !err
+                            res.json 200, null
                         else 
-                            res.send 400, 'Something went wrong!'
+                            res.json 404, 'Something went wrong!'
             
                 @app.use "/#{@name}", app
 
@@ -297,7 +306,7 @@ To update send the new values in request body to the entity url "/:id"
 Socket.io rooms are used to handle subscriptions to queries. The handler function
 handles create and update events.
 
-                handler = (eventType, item) =>
+                handler = (eventType, results, source) =>
 
                     rooms = socketio.sockets.manager.rooms
 
@@ -308,17 +317,18 @@ handles create and update events.
                             continue
                         query = spl[spl.length - 1]
                         q = JSON.parse query
-                        q._id = item._id
+                        q._id = results[0]._id
 
-                        ((namespace, eventType, query, item, instance) ->
+                        ((eventType, query, item, instance, socket) ->
+
                             instance.exists q, (bool) ->
 
                                 if bool
-                                    socketio.of(namespace)
-                                        .in(query)
+                                    socket.broadcast
+                                        .to(query)
                                         .emit eventType, item
 
-                        )(namespace, eventType, query, item, @)
+                        )(eventType, query, results[0], @, source)
 
                 @on 'create', handler
                 @on 'update', handler
@@ -330,13 +340,14 @@ handles create and update events.
 
 #### socket.io create
 
-Create documents by sending 'create' message together with a JSON object.
+Create documents by sending 'create' message together with a JSON object. The emit will
+get a response with the id of the newly created entity or an error.
 
                         socket.on 'create', (data) =>
 
-                            @create data, (err, item) ->
+                            @create data, socket, (err, results) ->
                                 if !err
-                                    socket.emit 'create', data
+                                    socket.emit 'create', {_id: results[0]._id}
                                 else 
                                     socket.emit 'create', {'error': 400}
 
@@ -352,18 +363,11 @@ key values to be updated.
                             if not id
                                 socket.emit {'error': 400}
                             else
-                                @update id, data, (err, count) =>
+                                @update id, data, socket, (err, count) =>
 
-                                    if !err and count is 1
-                                        @getById id, (err, item) ->
-                                            if !err
-                                                socket.emit 'update', item
-                                            else
-                                                socket.emit 'update', {'error': 400}
-                                    else if count is 0
-                                        socket.emit 'update', {'error': 404}
-                                    else
-                                        socket.emit 'update', {'error': 400}
+                                    if err
+                                        socket.emit 'update', err
+
 
 #### socket.io get
 
@@ -374,6 +378,9 @@ Query documents by sending an object with *query* and *options* key value pairs.
 
                         socket.on 'get', (data) =>
 
+                            if data.query and data.query._id
+                                data.query._id = new mongodb.ObjectID(data.query._id)
+
                             @get data.query or {}, data.options or {}, (err, items) ->
                                 socket.emit 'get', items
 
@@ -382,9 +389,7 @@ Query documents by sending an object with *query* and *options* key value pairs.
 Delete item by sending an object with the items _id.
 
                         socket.on 'delete', (data) =>
-
-                            @del data._id, (err) ->
-                                socket.emit 'delete', {}
+                            @del data._id
 
 #### Socket.io subscribe
 
@@ -392,11 +397,8 @@ Subscribing to entities is done by passing a mongodb query. The socket will
 get notifications of events that are returned by the query. The subscription also
 handles sending notifications about creation of new documents that fit the query.
 
-**NOTE!** *Subscribing also means that the client doing updates and creates will receive notifications.*
-
                         socket.on 'subscribe', (query) ->
                             socket.join JSON.stringify query
-                            socket.emit 'subscribed', ''
 
 
 #### Socket.io unsubscribe
@@ -405,9 +407,7 @@ The unsubscribe works the same way as the subscribe and will unsubscribe from al
 fit the query object.
 
                         socket.on 'unsubscribe', (query) ->
-
                             socket.leave JSON.stringify query
-                            socket.emit 'unsubscribed', ''
 
 
 #### Socket.io rooms
@@ -421,9 +421,6 @@ To get a list of all rooms currently subscribed to the client can send a getroom
 The disconnect event cleans up the mess.
 
                         socket.on 'disconnect', ->
-                            console.log 'disconnect received'
-                            console.log Object.keys socket
-                            console.log socketio.sockets.manager.roomClients[socket.id]
                             socket.removeAllListeners()
 
 

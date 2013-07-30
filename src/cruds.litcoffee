@@ -4,8 +4,9 @@ CRUDS
 [![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=master)](https://travis-ci.org/ksnabb/cruds)
 
 **CRUDS** aims to provide a fast and easy way to create and expose mongodb 
-collections for crud functionality through REST and websockets with optional real-time 
-subscribe and unsubscribe functionality throught a websocket interface.
+collections for crud functionality through a RESTful interface and through websockets. It also provides
+*subscribe* *unsubscribe* methods with the help of websockets for real-time applications. 
+
 
 **CRUDS** depends on [express](http://expressjs.com) and [socket.io](http://socket.io) to create
 the REST and Websocket endpoints. The REST is fully compatible with [backbone.js](http://backbonejs.org) models.
@@ -17,8 +18,8 @@ All code is released under the MIT license and can be found on [github](http://g
 
 3. Set endpoints with `cruds.set(name, app?, socketio?)`
 
-The 'cruds.set' function will create either socket.io namespace for the passed in name and/or a REST interface 
-for '/name'
+The 'cruds.set' function will create a socket.io namespace for the passed in name and a REST interface 
+for '/name' of which both are optional.
 
     cruds = (connectionString) ->
         mongodb = require "mongodb"
@@ -88,7 +89,7 @@ The **CRUDS** module exposes functions to do simple crud calls to mongodb collec
 ###Create an entity
 
 The *create* function takes the following arguments
- 
+
 - **doc** {Object}, The mongodb document to be created
 - **[source]** {Object}, Optional source of the caller of this function
 - **[callback]** {function}, Optional callback function
@@ -112,8 +113,8 @@ The *create* function takes the following arguments
 ###Update an entity
 
 The *update* function will update the queried document with the 
-key value pairs that is given as an argument leaving all
-non mentioned key value pairs untouched.
+key value pairs that is given leaving all non mentioned key value 
+pairs untouched.
   
 - **id** {String}, The hexadecimal representation of a mongodb ObjectID    
 - **doc** {Object}, The part of the document that should be updated
@@ -146,7 +147,7 @@ There are two functions to query entities. One takes
 and arbitrary mongodb json formated query *get* and 
 the other returns one document according to its id *getById*.
  
-The get function takes the following arguments:
+The get function accepts following arguments:
 
 - **query** {Object}, mongodb query  
 - **options** {Object}, mongodb node.js driver options  
@@ -167,7 +168,7 @@ The get function takes the following arguments:
                             callback err, col
 
 The *getById* function returns one item from mongodb
-and it takes the following arguments:
+and it accepts the following arguments:
 
 - **id** {String}, id in ObjectId hex representation  
 - **callback** {function}, callback function 
@@ -189,7 +190,7 @@ and it takes the following arguments:
 The del function deletes one entity at the time
 
 - **id** {String}, id in hex  
-- **callback** {function}, callback function
+- **[callback]** {function}, callback function
     
             del: (id, callback) ->
 
@@ -209,8 +210,7 @@ The del function deletes one entity at the time
 ### Request listener application
 
 The *setApp* method sets up a RESTful interface
-for the passed express application for this entity
-instance.
+for the passed express application.
 
             setApp: (@app) ->
                 app = express()
@@ -353,7 +353,7 @@ get a response with the id of the newly created entity or an error.
 
 #### socket.io udpate
 
-Update a document by sending a 'update' message with an object including and '_id' and the
+Update a document by sending a 'update' message with an object including a '_id' and the
 key values to be updated.
 
                         socket.on 'update', (data) =>

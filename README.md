@@ -15,3 +15,5 @@ the REST and Websocket endpoints. The REST is fully compatible with [backbone.js
 3. Set endpoints with `cruds.set(url, collection name, app?, socketio?)`
 
 More documentation can be found [here](http://ksnabb.github.io/cruds/).
+
+A GIST on how to make CRUDS work with express and socket.io can be found [here](https://gist.github.com/ksnabb/6142680).

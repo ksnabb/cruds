@@ -4,8 +4,8 @@ CRUDS
 [![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=master)](https://travis-ci.org/ksnabb/cruds)
 
 **CRUDS** aims to provide a fast and easy way to create and expose mongodb 
-collections for crud functionality through a RESTful interface and through websockets. It also provides
-*subscribe* *unsubscribe* methods with the help of websockets for real-time applications. 
+collections for crud functionality through a RESTful interface and websockets. It also provides
+*subscribe* *unsubscribe* methods for real-time applications. 
 
 
 **CRUDS** depends on [express](http://expressjs.com) and [socket.io](http://socket.io) to create
@@ -19,7 +19,7 @@ All code is released under the MIT license and can be found on [github](http://g
 3. Set endpoints with `cruds.set(name, app?, socketio?)`
 
 The 'cruds.set' function will create a socket.io namespace for the passed in name and a REST interface 
-for '/name' of which both are optional.
+under '/name' of which both are optional.
 
     cruds = (connectionString) ->
         mongodb = require "mongodb"

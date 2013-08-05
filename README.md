@@ -12,7 +12,7 @@ the REST and Websocket endpoints. The REST is fully compatible with [backbone.js
 
 2. In your express app `cruds = require("cruds")(<optional mongodb connection string>)`
 
-3. Set endpoints with `cruds.set(url, collection name, app?, socketio?)`
+3. Set endpoints with `cruds.set(name, app?, socketio?)`
 
 More documentation can be found [here](http://ksnabb.github.io/cruds/).
 

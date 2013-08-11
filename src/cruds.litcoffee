@@ -4,8 +4,8 @@ CRUDS
 [![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=master)](https://travis-ci.org/ksnabb/cruds)
 
 **CRUDS** aims to provide a fast and easy way to create and expose mongodb 
-collections for crud functionality through REST and websockets with optional real-time 
-subscribe and unsubscribe functionality throught a websocket interface.
+collections for crud functionality through a RESTful interface and websockets. The websockets
+interface also supports real-time subscribe and unsubscribe functionality.
 
 **CRUDS** depends on [express](http://expressjs.com) and [socket.io](http://socket.io) to create
 the REST and Websocket endpoints. The REST is fully compatible with [backbone.js](http://backbonejs.org) models.

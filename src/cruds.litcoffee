@@ -13,14 +13,31 @@ All code is released under the MIT license and can be found on [github](http://g
 
 1. Install with **npm** `npm install cruds`
 
-2. In your express app `cruds = require("cruds")(<optional mongodb connection string>)`
+2. In your express app `cruds = require("cruds")(<options>)`
 
 3. Set endpoints with `cruds.set(name, app?, socketio?)`
 
 The 'cruds.set' function will create a socket.io namespace for the passed in name and a REST interface 
 under '/name' of which both are optional.
 
-    cruds = (connectionString) ->
+    cruds = (options) ->
+
+Parse the options and set sensible defaults for the params. The options are optional and is not required.
+        
+        options = options or {}
+
+The connection string for mongodb.
+
+        connectionString = options.mongodb or "mongodb://localhost:27017/Entity"
+
+These middleware passed in will be set to the app created by CRUDS.
+
+        middleware = options.middleware or []
+
+The public base url for the uploaded files will be set as "/" or as the given url.
+
+        uploadBaseUrl = options.uploadBaseUrl or "/"
+
         mongodb = require "mongodb"
         express = require "express"
 
@@ -209,15 +226,17 @@ The del function deletes one entity at the time
 ### Request listener application
 
 The *setApp* method sets up a RESTful interface
-for the passed express application.
+for the passed express application. The passed in app should use
+the following middleware: express.json() and optionally express.multipart() for file uploads.
+These middleware are contained in the bodyparser middleware.
 
             setApp: (@app) ->
                 app = express()
 
-All messages from and to the RESTful interface are in JSON format and are parsed with the 
-bodyParser middleware.
-
-                app.use express.bodyParser()
+Set the given middleware for the app.
+                
+                for mw in middleware
+                    app.use md
 
 #### URL parameters
 
@@ -265,6 +284,14 @@ Get a single item by sending a GET request to the items url "/:id"
 Post to "/" to create a entity. The POST will return the id of the newly created entity.
 
                 app.post '/', (req, res) =>
+                
+                    for file of req.files
+                        ni = req.files[file].path.lastIndexOf("/") + 1
+                        fileName = req.files[file].path.slice(ni)
+                        if req.body["files"]
+                            req.body["files"].push "#{uploadBaseUrl}#{fileName}"
+                        else
+                            req.body["files"] = ["#{uploadBaseUrl}#{fileName}"]
 
                     @create req.body, (err, results) ->
                         if !err

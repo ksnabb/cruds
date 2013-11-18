@@ -1,19 +1,26 @@
 CRUDS
 =====
 
-[![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=master)](https://travis-ci.org/ksnabb/cruds)
+[![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=0.1.x)](https://travis-ci.org/ksnabb/cruds)
 
-**CRUDS** aims to provide a fast and easy way to create and expose mongodb 
-collections for crud functionality through REST and websockets with optional real-time 
-subscribe and unsubscribe functionality throught a websocket interface. **CRUDS** depends on [express](http://expressjs.com) and [socket.io](http://socket.io) to create
-the REST and Websocket endpoints. The REST is fully compatible with [backbone.js](http://backbonejs.org) models.
+This branch 0.1.x is supposed to fix issues that was noticed in the first version of CRUDS. These issues are the following:
 
-1. Install with **npm** `npm install cruds`
+ * File support and express middleware problems
+ * Own implementation of event emmitter had scope and concurrency problems
+ * Mongoose Schema support and internal use of mongoose models might be practical.
+ * Socket.io complexities and setup
+ * Tests was not extensive enough and did not reflect real cases of code.
 
-2. In your express app `cruds = require("cruds")(<optional mongodb connection string>)`
+ Solutions for the problems will be:
 
-3. Set endpoints with `cruds.set(name, app?, socketio?)`
+ * File support implementation together with options passing for the cruds creation
+ * Use node.js EventEmitter module
+ * Mongoose usage 
+ * Socket.io will be changed to ws which will work out of the box
+ * Moving to ws we need to rethink and redesign the subscription algorithm
+ * Tests will be written in mocha and run normally + with phantomjs
+ * More focus and measurements on speed and performance will be done
 
-More documentation can be found [here](http://ksnabb.github.io/cruds/).
+ Plese comment if there are other improvement suggestions for this CRUDS module.
 
-A GIST on how to make CRUDS work with express and socket.io can be found [here](https://gist.github.com/ksnabb/6142680).
+

@@ -9,7 +9,7 @@ This branch 0.1.x is supposed to fix issues that was noticed in the first versio
  * Own implementation of event emmitter had scope and concurrency problems
  * Mongoose Schema support and internal use of mongoose models might be practical.
  * Socket.io complexities and setup
- * Tests was not extensive enough and did not reflect real cases of code.
+ * Tests was not extensive enough and did not reflect real cases of code
 
  Solutions for the problems will be:
 
@@ -20,7 +20,8 @@ This branch 0.1.x is supposed to fix issues that was noticed in the first versio
  * Moving to ws we need to rethink and redesign the subscription algorithm
  * Tests will be written in mocha and run normally + with phantomjs
  * More focus and measurements on speed and performance will be done
+ * use grunt for building the project
 
- Plese comment if there are other improvement suggestions for this CRUDS module.
+ Please comment if there are other improvement suggestions for the CRUDS module.
 
 

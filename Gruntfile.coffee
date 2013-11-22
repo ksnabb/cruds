@@ -25,7 +25,9 @@ module.exports = (grunt) ->
     mocha:
       test:
         src: ['test/browser/*.html']
-        reporter: 'list'
+        options:
+          run: true
+          reporter: "List"
 
     watch:
       coffee: 

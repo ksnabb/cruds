@@ -1,20 +1,22 @@
 {
   "name": "cruds",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "private": false,
   "main": "lib/cruds.js",
   "dependencies": {
-    "express": "*", 
-    "socket.io": "*",
+    "express": "*",
     "mongodb": "*"
   },
   "devDependencies": {
     "coffee-script": "*",
     "mocha": "*",
     "chai": "*",
-    "supertest": "*",
-    "socket.io-client": "*",
-    "docco": "*"
+    "docco": "*",
+    "grunt": "~0.4.2",
+    "grunt-mocha": "~0.4.5",
+    "grunt-mocha-test": "~0.7.0",
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-watch": "~0.5.3"
   },
   "description": "Easy CRUD + SUBSCRIBE with mongodb and node.js.",
   "directories": {
@@ -33,6 +35,7 @@
     "crud",
     "rest",
     "real-time",
+    "publish-subscribe",
     "websockets"
   ],
   "author": "Kristoffer Snabb",

@@ -1,25 +1,25 @@
 should = chai.should()
 
-describe 'crud functions',  ->
+describe 'cruds',  ->
     
-    describe 'create',  ->
+    describe 'create with HTTP POST'
 
-        it 'should create a new document'
+    describe 'read with HTTP GET'
 
-    describe 'update',  ->
+    describe 'update with HTTP PUT'
 
-        it 'should update an existing document'
+    describe 'delete with HTTP DELETE'
 
-        it 'should only update the given key value pairs'
+    describe 'subscribe with long poll'
 
-    describe 'get',  ->
+    describe 'subscribe with SSE'
 
-        it 'should return documents with value 3 when query is {"value":3}'
+    describe 'create with WebSockets'
 
-        it 'should return documents with value less then 3 when query is { "value": { $lt: 3 }}'
+    describe 'read with WebSockets'
+    
+    describe 'update with WebSockets'
+    
+    describe 'delete with WebSockets'
 
-        it 'should return only the amount of documents that is set in the limit option'
-
-    describe 'delete',  ->
-
-        it 'should delete all the documents from the collection'
+    describe 'subscribe with WebSockets'

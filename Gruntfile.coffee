@@ -30,9 +30,9 @@ module.exports = (grunt) ->
           reporter: "List"
 
     watch:
-      coffee: 
-        files: ['src/cruds.coffee.md']
-        tasks: ['coffee:build']
+      main: 
+        files: ['src/cruds.coffee.md', 'test/browser/*.html', 'test/server/*.coffee']
+        tasks: ['coffee:build', 'coffee:test', 'mochaTest', 'mocha']
         options:
           spawn: false
 
@@ -41,6 +41,14 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-mocha-test'
   grunt.loadNpmTasks 'grunt-mocha'
   grunt.loadNpmTasks 'grunt-contrib-watch'
+  grunt.registerTask 'drop-mongodb', 'drop the database', ->
+    mongoose = require "mongoose"
+    done = @async()
+    mongoose.connect "mongodb://localhost:27017/test", ->
+      mongoose.connection.db.dropDatabase ->
+        mongoose.disconnect ->
+          done()
 
-  grunt.registerTask 'test', ['coffee:test', 'mochaTest', 'mocha']
+
+  grunt.registerTask 'test', ['drop-mongodb','coffee:build', 'coffee:test', 'mochaTest', 'mocha']
   grunt.registerTask 'default', ['coffee:build']

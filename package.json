@@ -5,7 +5,7 @@
   "main": "lib/cruds.js",
   "dependencies": {
     "express": "*",
-    "mongodb": "*"
+    "mongoose": "~3.8.1"
   },
   "devDependencies": {
     "coffee-script": "*",

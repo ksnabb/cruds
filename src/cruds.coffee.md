@@ -10,11 +10,37 @@ interface also supports real-time subscribe and unsubscribe functionality.
 
 ** TODO UPDATE THIS PART WITH DEPENDENCIES **
 
-** ADD INSTALLATION AND SETUP INSTRUCTIONS **
+    mongoose = require "mongoose"
+
+When creating a CRUDS you can pass in an options object. All parameters set by the options
+object are optional but some of them are highly recommended to use.
+
+The following parameters can be set:
+
+- **[name]** {String}, The name for the Entity which will be the name of the mongodb collection, default is "Entity"
+- **[schema]** {Object}, Equals the Mongoose schema object, if not set the Entity will be schemaless, default is schemaless {}
+- **[ConnectionString]** {String}, The mongodb connection string to be used, defaults to "mongodb://localhost:27017/cruds"
 
     cruds = (options) ->
 
+        unless options
+            options = {}
+
+        name = if options.name then options.name else "Entity"
+        schema = if options.schema then options.schema else new mongoose.Schema({}, {strict:false})
+
+        mongoose.connect (if options.connectionString then options.connectionString else "mongodb://localhost:27017/cruds"), (err) ->
+            if err
+                console.warn """
+                    You might have tried to create two endpoints with the same name. 
+                    Pass in a name option to get rid of this error.
+
+                    The original error was
+                    """, err
+
         class Entity
+
+            constructor: (@model) ->
 
 ## CRUD functions
 
@@ -22,12 +48,17 @@ The **CRUDS** module exposes functions to do simple crud calls to mongodb collec
 
 ###Create an entity
 
-The *create* function takes the following arguments
+The *create* function will create a new document for the passed in document. The callback will receive the 
+values that has changed during the creation of the document as parameters.
 
 - **doc** {Object}, The mongodb document to be created
-- **[callback]** {function}, Optional callback function
+- **[callback]** {function}, Optional callback function that will get two params err and the changed key value pairs
 
-            create: (doc, args...) ->
+            create: (doc, callback) ->
+                newEntity = new @model doc
+                newEntity.save (err, doc) ->
+                    if callback and not err
+                        callback err, doc.toObject()
 
 ###Update an entity
 
@@ -38,7 +69,9 @@ pairs untouched.
 - **doc** {Object}, The part of the document that should be updated
 - **[callback]** {function}, callback function     
 
-            update: (doc, args...) ->
+            update: (id, doc, callback) ->
+                @model.update {'_id': id}, doc, callback
+
 
 ###Query entities
 
@@ -52,15 +85,9 @@ The get function accepts following arguments:
 - **options** {Object}, mongodb node.js driver options  
 - **callback** {function}, callback function  
 
-            get: (query, options, callback) ->
-
-The *getById* function returns one item from mongodb
-and it accepts the following arguments:
-
-- **id** {String}, id in ObjectId hex representation  
-- **callback** {function}, callback function 
-
-            getById: (id, callback) ->
+            get: (query, fields, options, callback) ->
+                @model.find query, fields, options, (err, docs) ->
+                    callback err, docs
 
 ### Delete entity
 
@@ -70,7 +97,25 @@ The del function deletes one entity at the time
 - **[callback]** {function}, callback function
     
             del: (id, callback) ->
+                @model.findByIdAndRemove id, callback
+
+### Exist function
             
+The exist function checks if a certain query would return any documents.
+
+            exists: (query, callback) ->
+
+                @model.find query, '_id', {'limit': 1}, (err, doc) ->
+                    if callback
+                        callback err, (doc.length is 1)
+
+** Return this stuff and maybe write something about it**
+        
+        model = mongoose.model name, schema
+
+        return new Entity(model)
+
+    module.exports = cruds
 
 # License
 

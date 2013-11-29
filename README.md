@@ -1,7 +1,7 @@
 CRUDS
 =====
 
-[![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=0.1.x)](https://travis-ci.org/ksnabb/cruds)
+[![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=develop)](https://travis-ci.org/ksnabb/cruds)
 
 This branch 0.1.x is supposed to fix issues that was noticed in the first version of CRUDS. These issues are the following:
 

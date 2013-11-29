@@ -25,7 +25,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "cake test"
+    "test": "grunt test"
   },
   "repository": {
     "type": "git",

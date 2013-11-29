@@ -109,6 +109,15 @@ The exist function checks if a certain query would return any documents.
                     if callback
                         callback err, (doc.length is 1)
 
+
+### Entity router
+
+The router handles all the requests.
+
+            route: (req, res) ->
+
+                res.send "hello world"
+
 ** Return this stuff and maybe write something about it**
         
         model = mongoose.model name, schema

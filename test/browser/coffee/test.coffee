@@ -1,25 +1,56 @@
-should = chai.should()
+should = chai.should();
 
-describe 'cruds',  ->
+describe 'CRUDS',  ->
     
-    describe 'create with HTTP POST'
+    describe 'HTTP POST', ->
 
-    describe 'read with HTTP GET'
+        it 'should create a new document', (done) ->
+            $.ajax
+                method: "POST"
+                url: "/entity"
+                success: ->
+                    console.log 'ok'
+                error: ->
+                    console.log 'error'
+                complete: ->
+                    done()
 
-    describe 'update with HTTP PUT'
+    describe 'HTTP GET', ->
 
-    describe 'delete with HTTP DELETE'
+        it 'should return documents'
 
-    describe 'subscribe with long poll'
+    describe 'HTTP PUT', ->
 
-    describe 'subscribe with SSE'
+        it 'should update a document'
 
-    describe 'create with WebSockets'
+    describe 'HTTP DELETE', ->
 
-    describe 'read with WebSockets'
+        it 'should delete a document'
+
+    describe 'subscribe with long poll', ->
+
+        it 'should respond when there is an update'
+
+    describe 'subscribe with SSE', ->
+
+        it 'should respond when there is an update'
+
+    describe 'create with WebSockets', ->
+
+        it 'should create a documnet'
+
+    describe 'read with WebSockets', ->
+
+        it 'should return some documents'
     
-    describe 'update with WebSockets'
-    
-    describe 'delete with WebSockets'
+    describe 'update with WebSockets', ->
 
-    describe 'subscribe with WebSockets'
+        it 'should update a document'
+    
+    describe 'delete with WebSockets', ->
+
+        it 'should delete a document'
+
+    describe 'subscribe with WebSockets', ->
+
+        it 'should subscribe to updates of documents'

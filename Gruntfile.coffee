@@ -1,3 +1,5 @@
+path = require "path"
+
 module.exports = (grunt) ->
 
   grunt.initConfig
@@ -10,8 +12,11 @@ module.exports = (grunt) ->
         files:
           'lib/cruds.js': 'src/cruds.coffee.md'
       test:
+        options:
+          bare: true
         files:
           'test/browser/js/test.js': 'test/browser/coffee/test.coffee'
+          'test/express.js': 'test/express.coffee'
 
     mochaTest:
       test:
@@ -22,25 +27,23 @@ module.exports = (grunt) ->
           require: 'coffee-script'
         src: ['test/server/*.coffee']
 
-    mocha:
+    shell:
+      server:
+        command: 'PORT=3000 node ./test/express.js'
+        options:
+          async: true
+  
+    mocha_phantomjs:
       test:
-        src: ['test/browser/*.html']
         options:
-          run: true
-          reporter: "List"
-
-    watch:
-      main: 
-        files: ['src/cruds.coffee.md', 'test/browser/*.html', 'test/server/*.coffee']
-        tasks: ['coffee:build', 'coffee:test', 'mochaTest', 'mocha']
-        options:
-          spawn: false
+          reported: "list"
+          urls: ['http://localhost:3000/test.html']
 
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
-  grunt.loadNpmTasks 'grunt-mocha'
-  grunt.loadNpmTasks 'grunt-contrib-watch'
+  grunt.loadNpmTasks 'grunt-shell-spawn'
+  grunt.loadNpmTasks 'grunt-mocha-phantomjs'
   grunt.registerTask 'drop-mongodb', 'drop the database', ->
     mongoose = require "mongoose"
     done = @async()
@@ -50,5 +53,5 @@ module.exports = (grunt) ->
           done()
 
 
-  grunt.registerTask 'test', ['drop-mongodb','coffee:build', 'coffee:test', 'mochaTest', 'mocha']
+  grunt.registerTask 'test', ['drop-mongodb', 'coffee:build', 'coffee:test', 'mochaTest', 'shell:server', 'mocha_phantomjs', 'shell:server:kill']
   grunt.registerTask 'default', ['coffee:build']

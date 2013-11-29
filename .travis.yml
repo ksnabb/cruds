@@ -6,4 +6,3 @@ branches:
   only:
     - master
     - develop
-    - server-sent-events

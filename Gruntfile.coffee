@@ -47,11 +47,11 @@ module.exports = (grunt) ->
   grunt.registerTask 'drop-mongodb', 'drop the database', ->
     mongoose = require "mongoose"
     done = @async()
-    mongoose.connect "mongodb://localhost:27017/test", ->
+    mongoose.connect "mongodb://localhost:27017/cruds", ->
       mongoose.connection.db.dropDatabase ->
         mongoose.disconnect ->
           done()
 
 
-  grunt.registerTask 'test', ['drop-mongodb', 'coffee:build', 'coffee:test', 'mochaTest', 'shell:server', 'mocha_phantomjs', 'shell:server:kill']
+  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
   grunt.registerTask 'default', ['coffee:build']

@@ -58,7 +58,8 @@ values that has changed during the creation of the document as parameters.
                 newEntity = new @model doc
                 newEntity.save (err, doc) ->
                     if callback and not err
-                        callback err, doc.toObject()
+                        doc = {"_id": doc.toObject()._id}
+                        callback err, doc
 
 ###Update an entity
 
@@ -114,9 +115,26 @@ The exist function checks if a certain query would return any documents.
 
 The router handles all the requests.
 
-            route: (req, res) ->
+            route: (req, res) =>
 
-                res.send "hello world"
+                if req.method is "GET"
+                    @get req.query, (err, docs) ->
+                        res.json 200, docs
+
+                else if req.method is "POST"
+                    @create req.body, (err, doc) ->
+                        res.json 201, doc
+
+                else if req.method is "PUT"
+                    @update req.param.id, req.body, (err, doc) ->
+                        res.json 200, {}
+                        
+                else if req.method is "DELETE"
+                    @del req.param.id, (err) ->
+                        res.json 200, {}
+
+                else
+                    res.json {message: "request not supported"}
 
 ** Return this stuff and maybe write something about it**
         

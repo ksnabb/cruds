@@ -8,24 +8,67 @@ describe 'CRUDS',  ->
             $.ajax
                 method: "POST"
                 url: "/entity"
-                success: ->
-                    console.log 'ok'
-                error: ->
-                    console.log 'error'
-                complete: ->
+                data: {'hello': 'world'}
+                success: (data) ->
+                    data.should.have.keys('_id')
+                complete: (data, status) ->
+                    status.should.equal "success"
                     done()
 
     describe 'HTTP GET', ->
 
-        it 'should return documents'
+        it 'should return documents', (done) ->
+
+            $.ajax
+                method: "GET"
+                url: "/entity"
+                success: (data) ->
+                    data.length.should.not.eql 0
+                complete: (data, status) ->
+                    status.should.equal "success"
+                    done()
 
     describe 'HTTP PUT', ->
 
-        it 'should update a document'
+        it 'should update a document', (done) ->
+            $.ajax
+                method: "GET"
+                url: "/entity"
+                success: (data) ->
+                    id = data[0]._id
+                    $.ajax
+                        method: "PUT"
+                        url: "/entity/#{id}"
+                        data: {'updated': true}
+                        complete: (data, status) ->
+                            status.should.equal "success"
+                            done()
+                error: ->
+                    true.should.be.false
+                    done()
+                complete: (data, status) ->
+                    status.should.equal "success"
 
     describe 'HTTP DELETE', ->
 
-        it 'should delete a document'
+        it 'should delete a document', (done) ->
+            $.ajax
+                method: "GET"
+                url: "/entity"
+                success: (data) ->
+                    id = data[0]._id
+                    $.ajax
+                        method: "DELETE"
+                        url: "/entity/#{id}"
+                        complete: (data, status) ->
+                            status.should.equal "success"
+                            done()
+                error: ->
+                    true.should.be.false
+                    done()
+                complete: (data, status) ->
+                    status.should.equal "success"
+
 
     describe 'subscribe with long poll', ->
 

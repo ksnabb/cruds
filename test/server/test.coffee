@@ -21,15 +21,10 @@ describe 'crud functions',  ->
 			Entity.exists {'hello': 'world'}, (err, bool) ->
 				bool.should.be.false
 				Entity.create {'hello': 'world'}, (err, doc) ->
-					doc.should.have.keys '_id', '__v', 'hello'
+					doc.should.have.keys '_id'
 					Entity.exists doc, (err, bool) ->
 						bool.should.be.true
 						done()
-
-		it 'should not let values that does not fit the schema be saved in CRUDS with schema', (done) ->
-			SchemaEntity.create {'hello':'world'}, (err, doc) ->
-				doc.should.have.keys '__v', '_id'
-				done()
 
 	describe 'update',  ->
 

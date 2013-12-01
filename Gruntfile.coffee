@@ -55,4 +55,4 @@ module.exports = (grunt) ->
 
 
   grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
-  grunt.registerTask 'default', ['coffee:build']
+  grunt.registerTask 'default', ['coffee:build', 'coffee:test']

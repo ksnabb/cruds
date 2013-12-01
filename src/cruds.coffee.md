@@ -144,11 +144,14 @@ The websocket server will be set with this function
 
             routews: (ws) =>
 
-                handleMessage = (data, flags) ->
-                    doc = JSON.parse data
-                    if doc.method is "create"
-                        @create doc, (err, doc) ->
+                handleMessage = (message, flags) ->
+                    message = JSON.parse message
+                    if message.method is "create"
+                        @create message.data, (err, doc) ->
                             ws.send JSON.stringify doc
+                    else if message.method is "read"    
+                        @get message.data, (err, docs) ->
+                            ws.send JSON.stringify docs
                     else
                         ws.send "method not supported"
 

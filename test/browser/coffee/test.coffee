@@ -1,6 +1,14 @@
 should = chai.should();
+ws = null
 
 describe 'CRUDS',  ->
+
+
+    before (done) ->
+        ws = new WebSocket 'ws://localhost:3000/entity'
+        ws.onopen = ->
+            done()
+
     
     describe 'HTTP POST', ->
 
@@ -74,19 +82,23 @@ describe 'CRUDS',  ->
     describe 'create with WebSockets', ->
 
         it 'should create a document', (done) ->
-            ws = new WebSocket 'ws://localhost:3000/entity'
-            ws.onopen = ->
+            ws.onmessage = (evt) ->
+                obj = JSON.parse evt.data
+                obj.should.have.keys '_id'
+                done()
 
-                ws.onmessage = (evt) ->
-                    obj = JSON.parse evt.data
-                    obj.should.have.keys '_id'
-                    done()
-
-                ws.send JSON.stringify {method: 'create', data: {hello: 'world'}}
+            ws.send JSON.stringify {method: 'create', data: {hello: 'world'}}
 
     describe 'read with WebSockets', ->
 
-        it 'should return some documents'
+        it 'should return some documents', (done) ->
+            ws.onmessage = (evt) ->
+                obj = JSON.parse evt.data
+                (obj.length > 0).should.be.true
+                done()
+
+            ws.send JSON.stringify {method: 'read', data: {}}
+
     
     describe 'update with WebSockets', ->
 

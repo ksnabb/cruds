@@ -11,6 +11,7 @@ interface also supports real-time subscribe and unsubscribe functionality.
 ** TODO UPDATE THIS PART WITH DEPENDENCIES **
 
     mongoose = require "mongoose"
+    WebSocketServer = require('ws').Server
 
 When creating a CRUDS you can pass in an options object. All parameters set by the options
 object are optional but some of them are highly recommended to use.
@@ -28,6 +29,7 @@ The following parameters can be set:
 
         name = if options.name then options.name else "Entity"
         schema = if options.schema then options.schema else new mongoose.Schema({}, {strict:false})
+        wss = if options.server then new WebSocketServer {server: options.server, path: "/#{name}"} else null
 
         mongoose.connect (if options.connectionString then options.connectionString else "mongodb://localhost:27017/cruds"), (err) ->
             if err
@@ -136,11 +138,30 @@ The router handles all the requests.
                 else
                     res.json {message: "request not supported"}
 
+### WebSockets 
+
+The websocket server will be set with this function
+
+            routews: (ws) =>
+
+                handleMessage = (data, flags) ->
+                    doc = JSON.parse data
+                    if doc.method is "create"
+                        @create doc, (err, doc) ->
+                            ws.send JSON.stringify doc
+                    else
+                        ws.send "method not supported"
+
+                ws.on 'message', handleMessage.bind @
+
+
 ** Return this stuff and maybe write something about it**
         
         model = mongoose.model name, schema
 
-        return new Entity(model)
+        entity = new Entity(model)
+        wss.on 'connection', entity.routews if wss
+        return entity
 
     module.exports = cruds
 

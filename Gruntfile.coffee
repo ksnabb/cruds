@@ -37,6 +37,7 @@ module.exports = (grunt) ->
       test:
         options:
           reported: "list"
+          output: 'test.out'
           urls: ['http://localhost:3000/test.html']
 
 

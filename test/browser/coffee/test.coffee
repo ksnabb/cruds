@@ -15,6 +15,8 @@ describe 'CRUDS',  ->
                     status.should.equal "success"
                     done()
 
+        it 'should be able to create documents with files'
+
     describe 'HTTP GET', ->
 
         it 'should return documents', (done) ->
@@ -69,18 +71,18 @@ describe 'CRUDS',  ->
                 complete: (data, status) ->
                     status.should.equal "success"
 
-
-    describe 'subscribe with long poll', ->
-
-        it 'should respond when there is an update'
-
-    describe 'subscribe with SSE', ->
-
-        it 'should respond when there is an update'
-
     describe 'create with WebSockets', ->
 
-        it 'should create a documnet'
+        it 'should create a document', (done) ->
+            ws = new WebSocket 'ws://localhost:3000/entity'
+            ws.onopen = ->
+
+                ws.onmessage = (evt) ->
+                    obj = JSON.parse evt.data
+                    obj.should.have.keys '_id'
+                    done()
+
+                ws.send JSON.stringify {method: 'create', data: {hello: 'world'}}
 
     describe 'read with WebSockets', ->
 
@@ -97,3 +99,11 @@ describe 'CRUDS',  ->
     describe 'subscribe with WebSockets', ->
 
         it 'should subscribe to updates of documents'
+
+    describe 'subscribe with long poll', ->
+
+        it 'should respond when there is an update'
+
+    describe 'subscribe with SSE', ->
+
+        it 'should respond when there is an update'

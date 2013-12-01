@@ -152,6 +152,9 @@ The websocket server will be set with this function
                     else if message.method is "read"    
                         @get message.data, (err, docs) ->
                             ws.send JSON.stringify docs
+                    else if message.method is "update"
+                        @update message._id, message.data, (err, doc) ->
+                            ws.send "{}"
                     else
                         ws.send "method not supported"
 

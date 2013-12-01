@@ -102,7 +102,16 @@ describe 'CRUDS',  ->
     
     describe 'update with WebSockets', ->
 
-        it 'should update a document'
+        it 'should update a document', (done) ->
+            ws.onmessage = (evt) ->
+                obj = JSON.parse evt.data
+                ws.onmessage = (evt) ->
+                    evt.data.should.eql "{}"
+                    done()
+
+                ws.send JSON.stringify {method: 'update', id: obj[0]._id, data: {$set: {updated: true}}}
+
+            ws.send JSON.stringify {method: 'read', data: {}}
     
     describe 'delete with WebSockets', ->
 

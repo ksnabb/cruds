@@ -79,16 +79,6 @@ describe 'CRUDS',  ->
                 complete: (data, status) ->
                     status.should.equal "success"
 
-    describe 'create with WebSockets', ->
-
-        it 'should create a document', (done) ->
-            ws.onmessage = (evt) ->
-                obj = JSON.parse evt.data
-                obj.should.have.keys '_id'
-                done()
-
-            ws.send JSON.stringify {method: 'create', data: {hello: 'world'}}
-
     describe 'read with WebSockets', ->
 
         it 'should return some documents', (done) ->
@@ -97,8 +87,25 @@ describe 'CRUDS',  ->
                 (obj.length > 0).should.be.true
                 done()
 
-            ws.send JSON.stringify {method: 'read', data: {}}
+            ws.send JSON.stringify {method: 'read', query: {}}
 
+    describe 'create with WebSockets', ->
+
+        it 'should create a document', (done) ->
+            ws.onmessage = (evt) ->
+                obj = JSON.parse evt.data
+                obj.should.have.keys '_id'
+                id = obj._id
+
+                ws.onmessage = (evt) ->
+                    obj = JSON.parse evt.data
+                    obj[0]._id.should.eql id
+                    obj[0].hello.should.eql "worlds"
+                    done()
+
+                ws.send JSON.stringify {method: 'read', query: {'_id': id}}
+
+            ws.send JSON.stringify {method: 'create', doc: {hello: 'worlds'}}
     
     describe 'update with WebSockets', ->
 
@@ -109,13 +116,23 @@ describe 'CRUDS',  ->
                     evt.data.should.eql "{}"
                     done()
 
-                ws.send JSON.stringify {method: 'update', id: obj[0]._id, data: {$set: {updated: true}}}
+                ws.send JSON.stringify {method: 'update', id: obj[0]._id, doc: {$set: {updated: true}}}
 
-            ws.send JSON.stringify {method: 'read', data: {}}
+            ws.send JSON.stringify {method: 'read', query: {}}
     
     describe 'delete with WebSockets', ->
 
-        it 'should delete a document'
+        it 'should delete a document', (done) ->
+            ws.onmessage = (evt) ->
+                obj = JSON.parse evt.data
+                ws.onmessage = (evt) ->
+                    evt.data.should.eql "null"
+                    done()
+
+                ws.send JSON.stringify {method: 'delete', id: obj[0]._id}
+
+            ws.send JSON.stringify {method: 'read', query: {}}
+
 
     describe 'subscribe with WebSockets', ->
 

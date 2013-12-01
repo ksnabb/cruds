@@ -43,6 +43,7 @@ The following parameters can be set:
         class Entity
 
             constructor: (@model) ->
+                @sockets = []
 
 ## CRUD functions
 
@@ -144,17 +145,22 @@ The websocket server will be set with this function
 
             routews: (ws) =>
 
+                @sockets.push ws
+
                 handleMessage = (message, flags) ->
                     message = JSON.parse message
                     if message.method is "create"
-                        @create message.data, (err, doc) ->
+                        @create message.doc, (err, doc) ->
                             ws.send JSON.stringify doc
                     else if message.method is "read"    
-                        @get message.data, (err, docs) ->
+                        @get message.query, (err, docs) ->
                             ws.send JSON.stringify docs
                     else if message.method is "update"
-                        @update message._id, message.data, (err, doc) ->
+                        @update message.id, message.doc, (err, doc) ->
                             ws.send "{}"
+                    else if message.method is "delete"
+                        @del message.id, (err, doc) ->
+                            ws.send "null"
                     else
                         ws.send "method not supported"
 

@@ -112,18 +112,18 @@ The subscribe method can be used to get notifications of entity changes that fit
             subscribe: (ws, channel) ->
                 ws.channels.push channel
                 if @subscriptions["c-#{channel}"]
-                    @subscriptions["c-#{channel}"].push ws
+                    @subscriptions["c-#{channel}"].push ws.id
                 else
-                    @subscriptions["c-#{channel}"] = [ws]
+                    @subscriptions["c-#{channel}"] = [ws.id]
 
 ### Unsubscribe
 
             unsubscribe: (ws, channel) ->
 
-                i = ws.channel.indexOf channel
+                i = ws.channels.indexOf channel
                 if i > -1
-                    ws.channel.splice i, 1
-                    
+                    ws.channels.splice i, 1
+
                     i = @subscriptions["c-#{channel}"].indexOf ws.id
                     if i > -1
                         @subscriptions["c-#{channel}"].splice i, 1
@@ -194,7 +194,7 @@ The websocket server will be set with this function
                         ws.send "{}"
                     else if message.method is "subscriptions"
                         ws.send JSON.stringify ws.channels
-                    else if message.method.is "unsubscribe"
+                    else if message.method is "unsubscribe"
                         @unsubscribe ws, message.channel
                         ws.send "{}"
                     else

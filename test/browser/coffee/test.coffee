@@ -138,7 +138,18 @@ describe 'CRUDS',  ->
                 evt.data.should.eql "{}"
 
                 wsMessage {method: "subscriptions"}, (evt) ->
-                    console.log evt.data
+                    evt.data.should.include "channel-13"
+                    done()
+
+    describe 'unsubscribe with WebSockets', ->
+
+        it 'should be able to unsubscribe to previously subscribed channels', (done) ->
+
+            wsMessage {method: "unsubscribe", channel: 'channel-13'}, (evt) ->
+                evt.data.should.eql "{}"
+
+                wsMessage {method: "subscriptions"}, (evt) ->
+                    evt.data.should.not.include "channel-13"
                     done()
 
     describe 'subscribe with long poll', ->

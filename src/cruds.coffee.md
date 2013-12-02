@@ -44,6 +44,7 @@ The following parameters can be set:
 
             constructor: (@model) ->
                 @sockets = []
+                @subscriptions = {}
 
 ## CRUD functions
 
@@ -103,6 +104,30 @@ The del function deletes one entity at the time
             del: (id, callback) ->
                 @model.findByIdAndRemove id, callback
 
+
+### Subscribe 
+
+The subscribe method can be used to get notifications of entity changes that fit certain query.
+
+            subscribe: (ws, channel) ->
+                ws.channels.push channel
+                if @subscriptions["c-#{channel}"]
+                    @subscriptions["c-#{channel}"].push ws
+                else
+                    @subscriptions["c-#{channel}"] = [ws]
+
+### Unsubscribe
+
+            unsubscribe: (ws, channel) ->
+
+                i = ws.channel.indexOf channel
+                if i > -1
+                    ws.channel.splice i, 1
+                    
+                    i = @subscriptions["c-#{channel}"].indexOf ws.id
+                    if i > -1
+                        @subscriptions["c-#{channel}"].splice i, 1
+
 ### Exist function
             
 The exist function checks if a certain query would return any documents.
@@ -145,6 +170,9 @@ The websocket server will be set with this function
 
             routews: (ws) =>
 
+                ws.id = "" + Date.now() + Math.floor(Math.random() * 1000)
+                ws.channels = []
+
                 @sockets.push ws
 
                 handleMessage = (message, flags) ->
@@ -161,6 +189,14 @@ The websocket server will be set with this function
                     else if message.method is "delete"
                         @del message.id, (err, doc) ->
                             ws.send "null"
+                    else if message.method is "subscribe"
+                        @subscribe ws, message.channel
+                        ws.send "{}"
+                    else if message.method is "subscriptions"
+                        ws.send JSON.stringify ws.channels
+                    else if message.method.is "unsubscribe"
+                        @unsubscribe ws, message.channel
+                        ws.send "{}"
                     else
                         ws.send "method not supported"
 

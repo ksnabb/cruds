@@ -1,8 +1,14 @@
 should = chai.should();
 ws = null
 
-describe 'CRUDS',  ->
 
+wsMessage = (message, answer) ->
+    ws.onmessage = answer
+
+    ws.send JSON.stringify message
+
+
+describe 'CRUDS',  ->
 
     before (done) ->
         ws = new WebSocket 'ws://localhost:3000/entity'
@@ -82,61 +88,58 @@ describe 'CRUDS',  ->
     describe 'read with WebSockets', ->
 
         it 'should return some documents', (done) ->
-            ws.onmessage = (evt) ->
+            wsMessage {method: 'read', query: {}}, (evt) ->
                 obj = JSON.parse evt.data
                 (obj.length > 0).should.be.true
                 done()
 
-            ws.send JSON.stringify {method: 'read', query: {}}
-
     describe 'create with WebSockets', ->
 
         it 'should create a document', (done) ->
-            ws.onmessage = (evt) ->
+
+            wsMessage {method: 'create', doc: {hello: 'worlds'}}, (evt) ->
                 obj = JSON.parse evt.data
                 obj.should.have.keys '_id'
                 id = obj._id
 
-                ws.onmessage = (evt) ->
+                wsMessage {method: 'read', query: {'_id': id}}, (evt) ->
                     obj = JSON.parse evt.data
                     obj[0]._id.should.eql id
                     obj[0].hello.should.eql "worlds"
                     done()
-
-                ws.send JSON.stringify {method: 'read', query: {'_id': id}}
-
-            ws.send JSON.stringify {method: 'create', doc: {hello: 'worlds'}}
     
     describe 'update with WebSockets', ->
 
         it 'should update a document', (done) ->
-            ws.onmessage = (evt) ->
+
+            wsMessage {method: 'read', query: {}}, (evt) ->
                 obj = JSON.parse evt.data
-                ws.onmessage = (evt) ->
+
+                wsMessage {method: 'update', id: obj[0]._id, doc: {$set: {updated: true}}}, (evt) ->
                     evt.data.should.eql "{}"
                     done()
 
-                ws.send JSON.stringify {method: 'update', id: obj[0]._id, doc: {$set: {updated: true}}}
-
-            ws.send JSON.stringify {method: 'read', query: {}}
     
     describe 'delete with WebSockets', ->
 
         it 'should delete a document', (done) ->
-            ws.onmessage = (evt) ->
+            wsMessage {method: 'read', query: {}}, (evt) ->
                 obj = JSON.parse evt.data
-                ws.onmessage = (evt) ->
+
+                wsMessage {method: 'delete', id: obj[0]._id}, (evt) ->
                     evt.data.should.eql "null"
                     done()
 
-                ws.send JSON.stringify {method: 'delete', id: obj[0]._id}
-
-            ws.send JSON.stringify {method: 'read', query: {}}
-
-
     describe 'subscribe with WebSockets', ->
 
-        it 'should subscribe to updates of documents'
+        it 'should be able to subscribe to channels and receive updates from all other sockets subscribed to that channel', (done) ->
+
+            wsMessage {method: "subscribe", channel: 'channel-13'}, (evt) ->
+                evt.data.should.eql "{}"
+
+                wsMessage {method: "subscriptions"}, (evt) ->
+                    console.log evt.data
+                    done()
 
     describe 'subscribe with long poll', ->
 

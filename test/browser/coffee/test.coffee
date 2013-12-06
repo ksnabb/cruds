@@ -29,7 +29,32 @@ describe 'CRUDS',  ->
                     status.should.equal "success"
                     done()
 
-        it 'should be able to create documents with files'
+        it 'should be able to create documents with files', (done) ->
+            try
+                file = new Blob(["this is a plain text file"], {type: "text/plain"})
+            catch
+                builder = new WebKitBlobBuilder()
+                builder.append(["this is a plain text file"])
+                file = builder.getBlob("text/plain")
+
+            formdata = new FormData()
+            formdata.append "name-of-file-field", file, "name.txt"
+            formdata.append "other", "value"
+            
+            oReq = new XMLHttpRequest()
+            oReq.open("POST", "/entity")
+            oReq.send formdata
+            $.ajax
+                method: "POST"
+                url: "/entity"
+                data: formdata
+                processData: false
+                contentType: false
+                success: (data) ->
+                    data.should.have.keys('_id')
+                complete: (data, status) ->
+                    status.should.equal "success"
+                    done()
 
     describe 'HTTP GET', ->
 

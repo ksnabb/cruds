@@ -1,11 +1,14 @@
 should = chai.should();
 ws = null
 
+# globals for testing (remove them when time allows)
+fileId = null
 
 wsMessage = (message, answer) ->
     ws.onmessage = answer
 
     ws.send JSON.stringify message
+
 
 
 describe 'CRUDS',  ->
@@ -42,19 +45,14 @@ describe 'CRUDS',  ->
             formdata.append "other", "value"
             
             oReq = new XMLHttpRequest()
+            oReq.onload = ->
+                response = JSON.parse this.responseText
+                response.should.have.keys('_id')
+                fileId = response._id
+                done()
+
             oReq.open("POST", "/entity")
             oReq.send formdata
-            $.ajax
-                method: "POST"
-                url: "/entity"
-                data: formdata
-                processData: false
-                contentType: false
-                success: (data) ->
-                    data.should.have.keys('_id')
-                complete: (data, status) ->
-                    status.should.equal "success"
-                    done()
 
     describe 'HTTP GET', ->
 
@@ -89,6 +87,41 @@ describe 'CRUDS',  ->
                     done()
                 complete: (data, status) ->
                     status.should.equal "success"
+
+        it 'should be able to update files in documents', (done) ->
+            try
+                file = new Blob(["this is a plain text file with updates"], {type: "text/plain"})
+            catch
+                builder = new WebKitBlobBuilder()
+                builder.append(["this is a plain text file with updates"])
+                file = builder.getBlob("text/plain")
+
+            formdata = new FormData()
+            formdata.append "name-of-file-field", file, "name.txt"
+            formdata.append "other", "value"
+            
+            oReq = new XMLHttpRequest()
+            oReq.onload = ->
+                response = JSON.parse this.responseText
+                oReq = new XMLHttpRequest()
+                oReq.onload = ->
+                    response = JSON.parse this.responseText
+
+                    oReq = new XMLHttpRequest()
+                    oReq.onload = ->
+                        unless window.mochaPhantomJS # TODO find a way to test this in phantomjs
+                            this.responseText.should.eql "this is a plain text file with updates"
+                        done()
+
+                    oReq.open("GET", response[0]['name-of-file-field'].url)
+                    oReq.send()
+
+                oReq.open("GET", "/entity/#{fileId}")
+                oReq.send()
+
+            oReq.open("PUT", "/entity/#{fileId}")
+            oReq.send formdata
+
 
     describe 'HTTP DELETE', ->
 
@@ -184,3 +217,4 @@ describe 'CRUDS',  ->
     describe 'subscribe with SSE', ->
 
         it 'should respond when there is an update'
+

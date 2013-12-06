@@ -6,7 +6,8 @@
   "dependencies": {
     "express": "*",
     "mongoose": "~3.8.1",
-    "ws": "~0.4.31"
+    "ws": "~0.4.31",
+    "formidable": "~1.0.14"
   },
   "devDependencies": {
     "coffee-script": "*",
@@ -17,7 +18,8 @@
     "grunt-mocha-test": "~0.7.0",
     "grunt-contrib-coffee": "~0.7.0",
     "grunt-mocha-phantomjs": "~0.3.1",
-    "grunt-shell-spawn": "~0.3.0"
+    "grunt-shell-spawn": "~0.3.0",
+    "grunt-contrib-watch": "~0.5.3"
   },
   "description": "Easy CRUD + SUBSCRIBE with mongodb and node.js.",
   "directories": {

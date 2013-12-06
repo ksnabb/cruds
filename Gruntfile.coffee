@@ -40,11 +40,24 @@ module.exports = (grunt) ->
           output: 'test.out'
           urls: ['http://localhost:3000/test.html']
 
+    watch:
+      cruds: 
+        files: ['src/cruds.coffee.md']
+        tasks: ['coffee:build']
+        options:
+          spawn: false
+      tests:
+        files: ['test/browser/coffee/*.coffee']
+        tasks: ['coffee:test']
+        options:
+          spawn: false
+
 
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
   grunt.loadNpmTasks 'grunt-shell-spawn'
   grunt.loadNpmTasks 'grunt-mocha-phantomjs'
+  grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.registerTask 'drop-mongodb', 'drop the database', ->
     mongoose = require "mongoose"
     done = @async()

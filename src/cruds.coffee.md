@@ -166,7 +166,11 @@ The router handles all the requests.
             route: (req, res) =>
 
                 if req.method is "GET"
-                    @get req.query, (err, docs) ->
+                    id = req.params.id
+                    query = req.query
+                    if id
+                        query['_id'] = id
+                    @get query, (err, docs) ->
                         res.json 200, docs
                         
                 else if req.method is "DELETE"
@@ -178,23 +182,29 @@ The router handles all the requests.
                     contentType = req.get 'content-type'
                     isMultipart = contentType.search("multipart/form-data") > -1
 
-                    if req.method is "POST"
-                        if isMultipart
-                            form = new formidable.IncomingForm()
-                            form.uploadDir = uploadDir
-                            form.parse req, (err, fields, files) =>
-                                url = "#{req.originalUrl}/uploads/"
-                                for fileName of files
-                                    fields[fileName] = {
-                                        url: "#{uploadUrl}#{files[fileName].path.split('/').pop()}"
-                                        type: "#{files[fileName].type}"
-                                        name: "#{files[fileName].name}"
-                                    }
+                    if isMultipart
+                        form = new formidable.IncomingForm()
+                        form.uploadDir = uploadDir
+                        form.keepExtensions = true
+                        form.parse req, (err, fields, files) =>
+                            url = "#{req.originalUrl}/uploads/"
+                            for fileName of files
+                                fields[fileName] = {
+                                    url: "#{uploadUrl}#{files[fileName].path.split('/').pop()}"
+                                    type: "#{files[fileName].type}"
+                                    name: "#{files[fileName].name}"
+                                }
+
+                            if req.method is "POST"
                                 @create fields, (err, doc) ->
                                     res.json 201, doc
-                        else
-                            @create req.body, (err, doc) ->
-                                res.json 201, doc
+                            else if req.method is "PUT"
+                                @update req.params.id, fields, (err, doc) ->
+                                    res.json 200, {}
+
+                    else if req.method is "POST"
+                        @create req.body, (err, doc) ->
+                            res.json 201, doc
 
                     else if req.method is "PUT"
                         @update req.param.id, req.body, (err, doc) ->

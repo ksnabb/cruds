@@ -11,7 +11,10 @@ interface also supports real-time subscribe and unsubscribe functionality.
 ** TODO UPDATE THIS PART WITH DEPENDENCIES **
 
     mongoose = require "mongoose"
+    formidable = require "formidable"
     WebSocketServer = require('ws').Server
+    path = require "path"
+    fs = require "fs"
 
 When creating a CRUDS you can pass in an options object. All parameters set by the options
 object are optional but some of them are highly recommended to use.
@@ -27,9 +30,26 @@ The following parameters can be set:
         unless options
             options = {}
 
+Name of the Entity which will be used as the mongodb collection name
+
         name = if options.name then options.name else "Entity"
+
+Mongoose schema to be used to validate the uploads etc.
+
         schema = if options.schema then options.schema else new mongoose.Schema({}, {strict:false})
+
+Websocket is supported if a server instance is passed in
+
         wss = if options.server then new WebSocketServer {server: options.server, path: "/#{name}"} else null
+
+The uploadDir can or should be set to support file uploads. The public URL for the uploaded files will be at <url to entity>/uploads.
+
+        uploadDir = if options.uploadDir then options.uploadDir else path.join(__dirname, "../uploads/#{name}")
+        uploadUrl = if options.uploadUrl then options.uploadUrl else "#{name}-uploads/"
+
+        fs.mkdir path.join(__dirname, "../uploads"), (err) ->
+            fs.mkdir path.join(__dirname, "../uploads/#{name}"), (err) ->
+                #do nothing
 
         mongoose.connect (if options.connectionString then options.connectionString else "mongodb://localhost:27017/cruds"), (err) ->
             if err
@@ -148,21 +168,40 @@ The router handles all the requests.
                 if req.method is "GET"
                     @get req.query, (err, docs) ->
                         res.json 200, docs
-
-                else if req.method is "POST"
-                    @create req.body, (err, doc) ->
-                        res.json 201, doc
-
-                else if req.method is "PUT"
-                    @update req.param.id, req.body, (err, doc) ->
-                        res.json 200, {}
                         
                 else if req.method is "DELETE"
                     @del req.param.id, (err) ->
                         res.json 200, {}
 
                 else
-                    res.json {message: "request not supported"}
+
+                    contentType = req.get 'content-type'
+                    isMultipart = contentType.search("multipart/form-data") > -1
+
+                    if req.method is "POST"
+                        if isMultipart
+                            form = new formidable.IncomingForm()
+                            form.uploadDir = uploadDir
+                            form.parse req, (err, fields, files) =>
+                                url = "#{req.originalUrl}/uploads/"
+                                for fileName of files
+                                    fields[fileName] = {
+                                        url: "#{uploadUrl}#{files[fileName].path.split('/').pop()}"
+                                        type: "#{files[fileName].type}"
+                                        name: "#{files[fileName].name}"
+                                    }
+                                @create fields, (err, doc) ->
+                                    res.json 201, doc
+                        else
+                            @create req.body, (err, doc) ->
+                                res.json 201, doc
+
+                    else if req.method is "PUT"
+                        @update req.param.id, req.body, (err, doc) ->
+                            res.json 200, {}
+
+                    else
+                        res.json {message: "request method #{req.method} not supported"}
 
 ### WebSockets 
 

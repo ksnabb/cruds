@@ -28,6 +28,14 @@ module.exports = (grunt) ->
         src: ['test/server/*.coffee']
 
     shell:
+      rmuploads:
+        command: 'rm -rf uploads'
+        options:
+          async: true
+      rmentity:
+        command: 'rm -rf entity'
+        options:
+          async: true
       server:
         command: 'PORT=3000 node ./test/express.js'
         options:
@@ -67,5 +75,5 @@ module.exports = (grunt) ->
           done()
 
 
-  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
+  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'shell:rmuploads', 'shell:rmentity', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
   grunt.registerTask 'default', ['coffee:build', 'coffee:test']

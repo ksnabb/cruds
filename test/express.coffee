@@ -17,8 +17,8 @@ server = http.createServer(app).listen app.get("port"), ->
 
 #CRUDS SETUP
 cruds = require("../lib/cruds")({'server': server, 'name': 'entity'})
-app.use '/entity', cruds.route
-app.use '/entity-uploads', express.static(path.join(__dirname, "../uploads/entity")) # this is the default upload dir
-app.use '/entity/:id', cruds.route
+app.use '/entity-uploads', express.static(path.join(__dirname, "../uploads/Entity")) # this is the default upload dir
+app.all '/entity/:id', cruds.route
+app.all '/entity', cruds.route
 
 

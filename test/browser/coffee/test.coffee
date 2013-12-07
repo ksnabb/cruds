@@ -6,10 +6,7 @@ fileId = null
 
 wsMessage = (message, answer) ->
     ws.onmessage = answer
-
     ws.send JSON.stringify message
-
-
 
 describe 'CRUDS',  ->
 

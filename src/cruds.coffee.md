@@ -11,6 +11,7 @@ interface also supports real-time subscribe and unsubscribe functionality.
 ** TODO UPDATE THIS PART WITH DEPENDENCIES **
 
     mongoose = require "mongoose"
+    express = require "express"
     formidable = require "formidable"
     WebSocketServer = require('ws').Server
     path = require "path"
@@ -258,7 +259,14 @@ The websocket server will be set with this function
 
         entity = new Entity(model)
         wss.on 'connection', entity.routews if wss
-        return entity
+
+        app = new express()
+        app.all "/#{name}/:id", entity.route
+        app.all "/#{name}", entity.route
+        return {
+            entity: entity
+            app: app
+        }
 
     module.exports = cruds
 

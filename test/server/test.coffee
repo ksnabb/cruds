@@ -4,14 +4,15 @@ should = chai.should()
 mongoose = require "mongoose"
 cruds = require "../../lib/cruds"
 
-Entity = cruds {
+Entity = cruds({
 	connectionString: "mongodb://localhost:27017/test"
-}
-SchemaEntity = cruds {
+}).entity
+
+SchemaEntity = cruds({
 	name: "Person"
 	connectionString: "mongodb://localhost:27017/test"
 	schema: new mongoose.Schema {name: String}
-}
+}).entity
 
 describe 'crud functions',  ->
 	

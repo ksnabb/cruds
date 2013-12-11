@@ -30,12 +30,7 @@ describe 'CRUDS',  ->
                     done()
 
         it 'should be able to create documents with files', (done) ->
-            try
-                file = new Blob(["this is a plain text file"], {type: "text/plain"})
-            catch
-                builder = new WebKitBlobBuilder()
-                builder.append(["this is a plain text file"])
-                file = builder.getBlob("text/plain")
+            file = new Blob(["this is a plain text file"], {type: "text/plain"})
 
             formdata = new FormData()
             formdata.append "name-of-file-field", file, "name.txt"
@@ -64,6 +59,29 @@ describe 'CRUDS',  ->
                     status.should.equal "success"
                     done()
 
+        it 'should return one document according to its URI', (done) ->
+
+            $.ajax
+                method: "GET"
+                url: "/entity/#{fileId}"
+                success: (data) ->
+                    data.length.should.eql 1
+                complete: (data, status) ->
+                    status.should.equal "success"
+                    done()
+
+        it 'should be able to retrieve files attached to a document', (done) ->
+
+            $.ajax
+                method: "GET"
+                url: "/entity/#{fileId}"
+                success: (data) ->
+                    $.ajax
+                        method: "GET"
+                        url: "/entity/file/#{data[0]["name-of-file-field"].id}"
+                        success: (data) ->
+                            done()
+
     describe 'HTTP PUT', ->
 
         it 'should update a document', (done) ->
@@ -86,12 +104,8 @@ describe 'CRUDS',  ->
                     status.should.equal "success"
 
         it 'should be able to update files in documents', (done) ->
-            try
-                file = new Blob(["this is a plain text file with updates"], {type: "text/plain"})
-            catch
-                builder = new WebKitBlobBuilder()
-                builder.append(["this is a plain text file with updates"])
-                file = builder.getBlob("text/plain")
+
+            file = new Blob ["this is a plain text file with updates"], {type: "text/plain"}
 
             formdata = new FormData()
             formdata.append "name-of-file-field", file, "name.txt"
@@ -110,7 +124,7 @@ describe 'CRUDS',  ->
                             this.responseText.should.eql "this is a plain text file with updates"
                         done()
 
-                    oReq.open("GET", response[0]['name-of-file-field'].url)
+                    oReq.open("GET", "/entity/file/#{response[0]['name-of-file-field'].id}")
                     oReq.send()
 
                 oReq.open("GET", "/entity/#{fileId}")
@@ -122,7 +136,7 @@ describe 'CRUDS',  ->
 
     describe 'HTTP DELETE', ->
 
-        it 'should delete a document', (done) ->
+        it 'should delete a document', (done) ->    
             $.ajax
                 method: "GET"
                 url: "/entity"

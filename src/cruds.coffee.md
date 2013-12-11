@@ -10,12 +10,13 @@ interface also supports real-time subscribe and unsubscribe functionality.
 
 ** TODO UPDATE THIS PART WITH DEPENDENCIES **
 
-    mongoose = require "mongoose"
     express = require "express"
-    formidable = require "formidable"
-    WebSocketServer = require('ws').Server
-    path = require "path"
     fs = require "fs"
+    gridform = require "gridform"
+    mongoose = require "mongoose"
+    path = require "path"
+    _ = require "underscore"
+    WebSocketServer = require('ws').Server
 
 When creating a CRUDS you can pass in an options object. All parameters set by the options
 object are optional but some of them are highly recommended to use.
@@ -43,10 +44,6 @@ Websocket is supported if a server instance is passed in
 
         wss = if options.server then new WebSocketServer {server: options.server, path: "/#{name}"} else null
 
-The uploadDir can or should be set to support file uploads. The public URL for the uploaded files will be at <url to entity>/uploads.
-
-        uploadDir = if options.uploadDir then options.uploadDir else path.join(__dirname, "../uploads/#{name}")
-        uploadUrl = if options.uploadUrl then options.uploadUrl else "#{name}-uploads/"
 
         fs.mkdir path.join(__dirname, "../uploads"), (err) ->
             fs.mkdir path.join(__dirname, "../uploads/#{name}"), (err) ->
@@ -60,6 +57,10 @@ The uploadDir can or should be set to support file uploads. The public URL for t
 
                     The original error was
                     """, err
+            else
+                gridform.db = mongoose.connection.db
+                gridform.mongo = mongoose.mongo
+
 
         class Entity
 
@@ -184,23 +185,15 @@ The router handles all the requests.
                     isMultipart = contentType.search("multipart/form-data") > -1
 
                     if isMultipart
-                        form = new formidable.IncomingForm()
-                        form.uploadDir = uploadDir
-                        form.keepExtensions = true
+                        form = new gridform()
                         form.parse req, (err, fields, files) =>
-                            url = "#{req.originalUrl}/uploads/"
-                            for fileName of files
-                                fields[fileName] = {
-                                    url: "#{uploadUrl}#{files[fileName].path.split('/').pop()}"
-                                    type: "#{files[fileName].type}"
-                                    name: "#{files[fileName].name}"
-                                }
+                            doc = _.extend fields, files
 
                             if req.method is "POST"
-                                @create fields, (err, doc) ->
+                                @create doc, (err, doc) ->
                                     res.json 201, doc
                             else if req.method is "PUT"
-                                @update req.params.id, fields, (err, doc) ->
+                                @update req.params.id, doc, (err, doc) ->
                                     res.json 200, {}
 
                     else if req.method is "POST"
@@ -213,6 +206,17 @@ The router handles all the requests.
 
                     else
                         res.json {message: "request method #{req.method} not supported"}
+
+
+            fileRoute: (req, res) ->
+                id = req.params.id
+                readstream = gridform.gridfsStream(mongoose.connection.db, mongoose.mongo).createReadStream id
+
+                readstream.on 'error', (err) ->
+                    console.error('An error occurred!', err)
+                    throw err
+
+                readstream.pipe res
 
 ### WebSockets 
 
@@ -261,6 +265,7 @@ The websocket server will be set with this function
         wss.on 'connection', entity.routews if wss
 
         app = new express()
+        app.all "/#{name}/file/:id", entity.fileRoute
         app.all "/#{name}/:id", entity.route
         app.all "/#{name}", entity.route
         return {

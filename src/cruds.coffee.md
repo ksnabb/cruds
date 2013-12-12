@@ -4,11 +4,11 @@ CRUDS
 [![Build Status](https://travis-ci.org/ksnabb/cruds.png?branch=master)](https://travis-ci.org/ksnabb/cruds)
 
 **CRUDS** aims to provide a fast and easy way to create and expose mongodb 
-collections for crud functionality through a RESTful interface and websockets. The websockets
-interface also supports real-time subscribe and unsubscribe functionality.
+collections for basic crud functionality. Supports HTTP, WebSockets and 
+SSE (EventSource). The websockets and SSE also supports subscribe and unsubscribe
+funcationality for real-time messaging.
 
-
-** TODO UPDATE THIS PART WITH DEPENDENCIES **
+Note that this module is only intended for fast prorotype development.
 
     express = require "express"
     fs = require "fs"
@@ -19,12 +19,13 @@ interface also supports real-time subscribe and unsubscribe functionality.
     WebSocketServer = require('ws').Server
 
 When creating a CRUDS you can pass in an options object. All parameters set by the options
-object are optional but some of them are highly recommended to use.
+object are optional.
 
 The following parameters can be set:
 
 - **[name]** {String}, The name for the Entity which will be the name of the mongodb collection, default is "Entity"
 - **[schema]** {Object}, Equals the Mongoose schema object, if not set the Entity will be schemaless, default is schemaless {}
+- **[server]** {Object}, A ndoe js server that will be used to create the websocket connections
 - **[ConnectionString]** {String}, The mongodb connection string to be used, defaults to "mongodb://localhost:27017/cruds"
 
     cruds = (options) ->

@@ -38,6 +38,9 @@
     "publish-subscribe",
     "websockets"
   ],
+  "scripts": {
+    "test": "grunt test"
+  },
   "author": "Kristoffer Snabb",
   "license": "MIT"
 }

@@ -164,7 +164,8 @@ The exist function checks if a certain query would return any documents.
 
 ### Entity router
 
-The router handles all the requests.
+The router handles all the requests. Make sure no bodyparser or multipart middleware is used
+for this one to work for now.
 
             route: (req, res) =>
 
@@ -187,6 +188,14 @@ The router handles all the requests.
 
                     if isMultipart
                         form = new gridform()
+
+                        onPart = (gridPart, part) ->
+                            if part.filename and part.filename isnt ""
+                                gridPart.call this, part
+
+                        nativePart = form.onPart
+                        form.onPart = onPart.bind form, nativePart
+                        
                         form.parse req, (err, fields, files) =>
                             doc = _.extend fields, files
 

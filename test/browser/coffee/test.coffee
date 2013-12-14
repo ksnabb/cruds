@@ -8,6 +8,7 @@ wsMessage = (message, answer) ->
     ws.onmessage = answer
     ws.send JSON.stringify message
 
+
 describe 'CRUDS',  ->
 
     before (done) ->
@@ -41,6 +42,37 @@ describe 'CRUDS',  ->
                 response = JSON.parse this.responseText
                 response.should.have.keys('_id')
                 fileId = response._id
+                done()
+
+            oReq.open("POST", "/entity")
+            oReq.send formdata
+
+
+        it 'should be able to handle empty file fields', (done) ->
+
+            file = new Blob(["this is a plain text file"], {type: "text/plain"})
+
+            # create a form
+            form = document.createElement "form"
+            form.action = "/entity"
+            form.method = "post"
+            form.enctype = "multipart/form-data"
+
+            # create a empty file input
+            fileInput = document.createElement "input"
+            fileInput.type = "file"
+            fileInput.accept = "audio/*"
+            fileInput.name = "testing"
+            form.appendChild fileInput
+
+            # send the data
+            formdata = new FormData(form)
+            formdata.append 'other', 'value'
+
+            oReq = new XMLHttpRequest()
+            oReq.onload = ->
+                response = JSON.parse this.responseText
+                response.should.have.keys('_id')
                 done()
 
             oReq.open("POST", "/entity")
@@ -81,6 +113,7 @@ describe 'CRUDS',  ->
                         url: "/entity/file/#{data[0]["name-of-file-field"].id}"
                         success: (data) ->
                             done()
+
 
     describe 'HTTP PUT', ->
 

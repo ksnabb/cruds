@@ -190,7 +190,7 @@ for this one to work for now.
                         form = new gridform()
 
                         onPart = (gridPart, part) ->
-                            if part.filename and part.filename isnt ""
+                            if not part.filename? or (part.filename and part.filename isnt "")
                                 gridPart.call this, part
 
                         nativePart = form.onPart

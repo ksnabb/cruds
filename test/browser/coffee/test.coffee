@@ -42,7 +42,16 @@ describe 'CRUDS',  ->
                 response = JSON.parse this.responseText
                 response.should.have.keys('_id')
                 fileId = response._id
-                done()
+
+                # get the created doc
+                oReq = new XMLHttpRequest()
+                oReq.onload = ->
+                    response = JSON.parse this.responseText
+                    response[0].should.have.keys('other', 'name-of-file-field', '_id', '__v')
+                    done()
+
+                oReq.open "GET", "/entity/#{fileId}"
+                oReq.send()
 
             oReq.open("POST", "/entity")
             oReq.send formdata
@@ -72,6 +81,7 @@ describe 'CRUDS',  ->
             oReq = new XMLHttpRequest()
             oReq.onload = ->
                 response = JSON.parse this.responseText
+                console.log response
                 response.should.have.keys('_id')
                 done()
 

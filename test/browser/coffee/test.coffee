@@ -81,7 +81,6 @@ describe 'CRUDS',  ->
             oReq = new XMLHttpRequest()
             oReq.onload = ->
                 response = JSON.parse this.responseText
-                console.log response
                 response.should.have.keys('_id')
                 done()
 

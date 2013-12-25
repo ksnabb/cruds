@@ -12,7 +12,7 @@ wsMessage = (message, answer) ->
 describe 'CRUDS',  ->
 
     before (done) ->
-        ws = new WebSocket 'ws://localhost:3000/entity'
+        ws = new WebSocket "ws://#{window.location.host}/entity"
         ws.onopen = ->
             done()
 

@@ -34,8 +34,8 @@ module.exports = (grunt) ->
         command: 'PORT=3000 node ./test/express.js'
         options:
           async: true
-      cpsync:
-        command: 'cp lib/Backbone.cruds.sync.js test/browser/js/Backbone.cruds.sync.js'
+      #cpsync:
+      #  command: 'cp lib/Backbone.cruds.sync.js test/browser/js/Backbone.cruds.sync.js'
   
     mocha_phantomjs:
       test:
@@ -71,5 +71,5 @@ module.exports = (grunt) ->
           done()
 
 
-  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'shell:cpsync', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
+  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
   grunt.registerTask 'default', ['coffee:build', 'coffee:test']

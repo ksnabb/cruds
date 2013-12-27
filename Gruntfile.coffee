@@ -11,11 +11,13 @@ module.exports = (grunt) ->
           bare: true
         files:
           'lib/cruds.js': 'src/cruds.coffee.md'
+          'lib/Backbone.cruds.sync.js': 'src/Backbone.cruds.sync.coffee.md'
       test:
         options:
           bare: true
         files:
-          'test/browser/js/test.js': 'test/browser/coffee/test.coffee'
+          'test/browser/js/test.raw.js': 'test/browser/coffee/test.raw.coffee'
+          'test/browser/js/test.backbone.cruds.js': 'test/browser/coffee/test.backbone.cruds.coffee'
           'test/express.js': 'test/express.coffee'
 
     mochaTest:
@@ -28,18 +30,12 @@ module.exports = (grunt) ->
         src: ['test/server/*.coffee']
 
     shell:
-      rmuploads:
-        command: 'rm -rf uploads'
-        options:
-          async: true
-      rmentity:
-        command: 'rm -rf entity'
-        options:
-          async: true
       server:
         command: 'PORT=3000 node ./test/express.js'
         options:
           async: true
+      cpsync:
+        command: 'cp lib/Backbone.cruds.sync.js test/browser/js/Backbone.cruds.sync.js'
   
     mocha_phantomjs:
       test:
@@ -75,5 +71,5 @@ module.exports = (grunt) ->
           done()
 
 
-  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'shell:rmuploads', 'shell:rmentity', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
+  grunt.registerTask 'test', ['coffee:build', 'coffee:test', 'shell:cpsync', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
   grunt.registerTask 'default', ['coffee:build', 'coffee:test']

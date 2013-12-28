@@ -240,29 +240,68 @@ The websocket server will be set with this function
                 @sockets.push ws
 
                 handleMessage = (message, flags) ->
+
+
                     message = JSON.parse message
+
+Messages received can include timestamps that should also be attached to the
+reponse so the client knows which request is responded to.
+
+                    ts = 0
+                    if message.ts
+                        ts = message.ts
+
                     if message.method is "create"
                         @create message.doc, (err, doc) ->
-                            ws.send JSON.stringify doc
+                            response = {
+                                ts: ts
+                                data: doc
+                            }
+                            ws.send JSON.stringify response
+
                     else if message.method is "read"    
                         @get message.query, (err, docs) ->
-                            ws.send JSON.stringify docs
+                            response = {
+                                ts: ts
+                                data: docs
+                            }
+                            ws.send JSON.stringify response
+
                     else if message.method is "update"
                         @update message.id, message.doc, (err, doc) ->
-                            ws.send "{}"
+                            response = {ts: ts}
+                            ws.send JSON.stringify response
+
                     else if message.method is "delete"
                         @del message.id, (err, doc) ->
-                            ws.send "null"
+                            response = {ts: ts}
+                            ws.send JSON.stringify response
+
                     else if message.method is "subscribe"
                         @subscribe ws, message.channel
-                        ws.send "{}"
+                        response = {ts: ts}
+                        ws.send JSON.stringify response
+
                     else if message.method is "subscriptions"
-                        ws.send JSON.stringify ws.channels
+                        response = {
+                            ts: ts
+                            data: ws.channels
+                        }
+                        ws.send JSON.stringify response
+
                     else if message.method is "unsubscribe"
                         @unsubscribe ws, message.channel
-                        ws.send "{}"
+                        response = {
+                            ts: ts
+                        }
+                        ws.send JSON.stringify response
+                        
                     else
-                        ws.send "method not supported"
+                        response = {
+                            ts: ts
+                            data: "method not supported"
+                        }
+                        ws.send JSON.stringify response
 
                 ws.on 'message', handleMessage.bind @
 

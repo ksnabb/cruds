@@ -43,6 +43,18 @@ describe 'crud functions',  ->
 					numberAffected.should.equal 1
 					done()
 
+		it 'should emit "updated" event after the document has been updated', (done) ->
+			uid = 0
+			Entity.once 'updated', (id, doc) ->
+				id.should.eql id
+				doc.should.have.key '$set'
+				done()
+
+			Entity.get {}, null, null, (err, docs) ->
+				doc = docs[0].toObject()
+				uid = doc._id
+				Entity.update uid, {$set: {updateEvent: 'waiting for event'}}
+
 	describe 'get',  ->
 
 		before (done) ->

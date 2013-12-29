@@ -104,7 +104,9 @@ pairs untouched.
 
             update: (id, doc, callback) ->
                 @model.update {'_id': id}, doc, (err, numberAffected, raw) =>
-                    callback err, numberAffected, raw
+                
+                    if callback
+                        callback err, numberAffected, raw
 
                     unless err
                         @emit("updated", id, doc)

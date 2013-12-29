@@ -86,6 +86,17 @@ describe 'crud functions',  ->
 
 	describe 'delete',  ->
 
+		it 'should emit "deleted" event after a document has been deleted', (done) ->
+			did = 0
+			Entity.once "deleted", (id) ->
+				id.should.eql did
+				done()
+
+			Entity.get {}, (err, docs) ->
+				did = docs[0]._id
+				Entity.del did
+
+
 		it 'should delete all the documents from the collection', (done) ->
 			Entity.get {}, null, null, (err, docs) ->
 				i = 0 
@@ -94,4 +105,4 @@ describe 'crud functions',  ->
 						i++
 						if i is docs.length
 							Entity.get {}, null, null, (err, docs) ->
-								done()	
+								done()

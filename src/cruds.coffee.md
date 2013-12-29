@@ -104,7 +104,7 @@ pairs untouched.
 
             update: (id, doc, callback) ->
                 @model.update {'_id': id}, doc, (err, numberAffected, raw) =>
-                
+
                     if callback
                         callback err, numberAffected, raw
 
@@ -136,9 +136,12 @@ The del function deletes one entity at the time
 - **[callback]** {function}, callback function
     
             del: (id, callback) ->
-                @model.findByIdAndRemove id, ->
-                    callback()
-                    @emit("deleted", id)
+                @model.findByIdAndRemove id, (err) =>
+                    if callback
+                        callback(err)
+
+                    unless err
+                        @emit "deleted", id
 
 
 ### Subscribe 

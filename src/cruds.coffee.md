@@ -11,12 +11,13 @@ funcationality for real-time messaging.
 Note that this module is only intended for fast prorotype development.
 
     express = require "express"
+    events = require "events"
     fs = require "fs"
     gridform = require "gridform"
     mongoose = require "mongoose"
     path = require "path"
-    _ = require "underscore"
     WebSocketServer = require('ws').Server
+    _ = require "underscore"
 
 When creating a CRUDS you can pass in an options object. All parameters set by the options
 object are optional.
@@ -63,7 +64,7 @@ Websocket is supported if a server instance is passed in
                 gridform.mongo = mongoose.mongo
 
 
-        class Entity
+        class Entity extends events.EventEmitter
 
             constructor: (@model) ->
                 @sockets = []
@@ -83,22 +84,30 @@ values that has changed during the creation of the document as parameters.
 
             create: (doc, callback) ->
                 newEntity = new @model doc
-                newEntity.save (err, doc) ->
-                    if callback and not err
-                        doc = {"_id": doc.toObject()._id}
-                        callback err, doc
+                newEntity.save (err, doc) =>
+                    unless err 
+                        doc = doc.toObject()
+                        docid = {"_id": doc._id}
+                        if callback
+                            callback err, docid
+                        @emit "created", doc
 
 ###Update an entity
 
 The *update* function will update the queried document with the 
 key value pairs that is given leaving all non mentioned key value 
 pairs untouched.
-      
+
+- **id** {Number}, The id of the document to be updated
 - **doc** {Object}, The part of the document that should be updated
 - **[callback]** {function}, callback function     
 
             update: (id, doc, callback) ->
-                @model.update {'_id': id}, doc, callback
+                @model.update {'_id': id}, doc, (err, numberAffected, raw) =>
+                    callback err, numberAffected, raw
+
+                    unless err
+                        @emit("updated", id, doc)
 
 
 ###Query entities
@@ -125,7 +134,9 @@ The del function deletes one entity at the time
 - **[callback]** {function}, callback function
     
             del: (id, callback) ->
-                @model.findByIdAndRemove id, callback
+                @model.findByIdAndRemove id, ->
+                    callback()
+                    @emit("deleted", id)
 
 
 ### Subscribe 
@@ -295,7 +306,7 @@ reponse so the client knows which request is responded to.
                             ts: ts
                         }
                         ws.send JSON.stringify response
-                        
+
                     else
                         response = {
                             ts: ts

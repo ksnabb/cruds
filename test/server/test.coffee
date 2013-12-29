@@ -27,6 +27,12 @@ describe 'crud functions',  ->
 						bool.should.be.true
 						done()
 
+		it 'should emit "created" event after the document has been created', (done) ->
+			Entity.once 'created', (doc) ->
+				doc.should.have.keys '_id', '__v', 'send'
+				done()
+			Entity.create {'send': 'me an event'}
+
 	describe 'update',  ->
 
 		it 'should update an existing document', (done) ->

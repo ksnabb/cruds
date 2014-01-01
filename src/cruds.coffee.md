@@ -46,11 +46,6 @@ Websocket is supported if a server instance is passed in
 
         wss = if options.server then new WebSocketServer {server: options.server, path: "/#{name}"} else null
 
-
-        fs.mkdir path.join(__dirname, "../uploads"), (err) ->
-            fs.mkdir path.join(__dirname, "../uploads/#{name}"), (err) ->
-                #do nothing
-
         mongoose.connect (if options.connectionString then options.connectionString else "mongodb://localhost:27017/cruds"), (err) ->
             if err
                 console.warn """
@@ -82,7 +77,13 @@ values that has changed during the creation of the document as parameters.
 - **doc** {Object}, The mongodb document to be created
 - **[callback]** {function}, Optional callback function that will get two params err and the changed key value pairs
 
-            create: (doc, callback) ->
+            create: (doc, args...)->
+                if _.isFunction args[0]
+                    callback = args[0]
+                else
+                    channel = args[0]
+                    callback = args[1]
+
                 newEntity = new @model doc
                 newEntity.save (err, doc) =>
                     unless err 
@@ -90,7 +91,7 @@ values that has changed during the creation of the document as parameters.
                         docid = {"_id": doc._id}
                         if callback
                             callback err, docid
-                        @emit "created", doc
+                        @emit "created", doc, channel
 
 ###Update an entity
 
@@ -114,15 +115,13 @@ pairs untouched.
 
 ###Query entities
 
-There are two functions to query entities. One takes
-and arbitrary mongodb json formated query *get* and 
-the other returns one document according to its id *getById*.
- 
 The get function accepts following arguments:
 
 - **query** {Object}, mongodb query  
 - **options** {Object}, mongodb node.js driver options  
-- **callback** {function}, callback function  
+- **callback** {function}, callback function
+
+Query entities with the get function.
 
             get: (query, fields, options, callback) ->
                 @model.find query, fields, options, (err, docs) ->
@@ -130,11 +129,11 @@ The get function accepts following arguments:
 
 ### Delete entity
 
-The del function deletes one entity at the time
-
 - **id** {String}, id in hex  
 - **[callback]** {function}, callback function
-    
+
+The del function deletes one entity at the time
+
             del: (id, callback) ->
                 @model.findByIdAndRemove id, (err) =>
                     if callback
@@ -144,28 +143,60 @@ The del function deletes one entity at the time
                         @emit "deleted", id
 
 
+### Broadcast
+
+Broadcast message to all in a certain channel except the broadcaster.
+
+            broadcast: (message, ws, channel) ->
+                console.log wss.clients
+
+ 
 ### Subscribe 
 
 The subscribe method can be used to get notifications of entity changes that fit certain query.
+THe channel is any arbitrary string that identifies the channel or the URI for any document, collection
+or part of collection.
+
+If given channel starts by the url for this Entity the channel is seen as a URI otherwise it's a generic String.
 
             subscribe: (ws, channel) ->
+                channel = "c-#{channel}"
+
                 ws.channels.push channel
-                if @subscriptions["c-#{channel}"]
-                    @subscriptions["c-#{channel}"].push ws.id
+                if @subscriptions[channel] 
+                    sws = _.find @subscriptions[channel], (sws) ->
+                                    if sws.id is ws.id
+                                        return true
+                    unless sws
+                        @subscriptions[channel].push ws
                 else
-                    @subscriptions["c-#{channel}"] = [ws.id]
+                    @subscriptions[channel] = [ws]
 
 ### Unsubscribe
 
             unsubscribe: (ws, channel) ->
+                channel = "c-#{channel}"
+
+Check if websocket has a subscription to chanell
 
                 i = ws.channels.indexOf channel
                 if i > -1
                     ws.channels.splice i, 1
+                    i = 0
 
-                    i = @subscriptions["c-#{channel}"].indexOf ws.id
-                    if i > -1
-                        @subscriptions["c-#{channel}"].splice i, 1
+If subscriptions can find the websocket remove it from the object
+
+                    _.find @subscriptions[channel], (sws) ->
+                        if sws.id is ws.id
+                            return true
+                        i++
+                        return false         
+                    @subscriptions[channel].splice i, 1
+
+Finally remove the key from the subscriptions object to reduce the amount of keys.
+
+                    if @subscriptions[channel].length is 0
+                        delete @subscriptions[channel]
 
 ### Exist function
             
@@ -246,18 +277,36 @@ for this one to work for now.
 
 ### WebSockets 
 
-The websocket server will be set with this function
+The websocket server will be set with this function. The WebSocket connection
+allowes create, read, update, delete, subscribe, unsubscribe, subscriptions, broadcast methods.
+
+create - create a new entity into the db (persistent)
+read - read entities from db
+update - update entity in db
+delete - delete entity from db
+subscribe - subscribe to a channel
+unsubscribe - unsubscribe from a channel
+subscriptions - return subscriptions for the client making the request
+broadcast - broadcst message to a channel 
+peers - return a list of clients subscribed to a certain channel TODO
 
             routews: (ws) =>
-
                 ws.id = "" + Date.now() + Math.floor(Math.random() * 1000)
                 ws.channels = []
 
+                ws.on "close", ((ws) ->
+                    for channel in ws.channels
+                        console.log "unsubscribe"
+                        console.log channel
+                        console.log ws.id
+                        @unsubscribe ws, channel.substr(2)
+                ).bind @, ws
+
                 @sockets.push ws
 
-                handleMessage = (message, flags) ->
+                handleMessage = (message, flags) =>
 
-
+                    messageJSON = message
                     message = JSON.parse message
 
 Messages received can include timestamps that should also be attached to the
@@ -312,6 +361,14 @@ reponse so the client knows which request is responded to.
                         }
                         ws.send JSON.stringify response
 
+                    else if message.method is "broadcast"
+                        console.log "broadcast"
+                        console.log message
+                        for socket in @subscriptions["c-#{message.channel}"]
+                            console.log "send to socket"
+                            console.log socket.id
+                            console.log @subscriptions
+                            socket.send JSON.stringify {data: message.data, channel: message.channel}
                     else
                         response = {
                             ts: ts

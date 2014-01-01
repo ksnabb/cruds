@@ -21,7 +21,6 @@ HTTP
 LocalStorage
 
     Backbone.getSyncMethod = (url) ->
-        console.log "getSyncMethod"
 
         wsConnection = null
         listeners = []
@@ -29,7 +28,6 @@ LocalStorage
         connect = ->
             return new Promise (resolve, reject) ->
                 unless wsConnection
-                    console.log "first try to connect"
                     wsConnection = new WebSocket "ws://#{window.location.host}#{url}"
                     wsConnection.onopen = ->
                         resolve wsConnection
@@ -43,29 +41,20 @@ LocalStorage
                         listeners = newListeners
 
                 else if wsConnection.readyState isnt 1
-                    console.log "connection not ok and appended onopen"
                     oldopen = wsConnection.onopen;
                     wsConnection.onopen = ->
-                        console.log "onopen with appended listener"
                         oldopen()
                         resolve wsConnection
                 else
-                    console.log "connection ok"
                     resolve wsConnection
 
         wsMessage = (wsConnection, message) ->
-            console.log "send message"
-            console.log message
 
             return new Promise (resolve, reject) ->
                 ts = Date.now() + Math.random()
                 listeners.push ((resolve, ts, msg) ->
-                    console.log 'received message'
-                    console.log ts
                     msg = JSON.parse msg.data
-                    console.log msg
                     if msg.ts is ts
-                        console.log "resolve"
                         resolve msg.data
                         return true
                     else 
@@ -76,7 +65,6 @@ LocalStorage
                 wsConnection.send JSON.stringify message
 
         return (method, model, options) ->
-
             if method is "create"
                 connect()
                     .then (wsConnection) ->
@@ -84,8 +72,13 @@ LocalStorage
                     .then (msg) ->
                         model.set msg
 
+                        if options.broadcast
+                            connect()
+                                .then (wsConnection) ->
+                                    wsMessage wsConnection, {method: "broadcast", data: model.attributes, channel: url}
+
+
             else if method is "read"
-                console.log "read in sync"
                 connect()
                     .then (wsConnection) ->
                         wsMessage(wsConnection, {method: "read"})
@@ -95,7 +88,6 @@ LocalStorage
                         subscribe model
 
             else if method is "subscribe"
-                console.log "subscribe in sync"
                 connect()
                     .then (wsConnection) ->
                         wsMessage wsConnection, {method: "subscribe", channel: url}
@@ -103,8 +95,13 @@ LocalStorage
                         connect()
                     .then (wsConnection) ->
                         listeners.push ((msg)->
-                            console.log "subscription message"
-                            console.log msg
+                            data = JSON.parse msg.data
+                            if data.channel is url
+                                m = model.get(data.data._id)
+                                if m
+                                    m.set data.data
+                                else
+                                    model.create data.data
                             ).bind @
 
             else 
@@ -115,4 +112,5 @@ LocalStorage
 Other Backbone overrides that should be moved elsewhere maybe?
 
     Backbone.Collection.prototype.subscribe = (options) ->
-        @.sync "subscribe", @, options
+        @sync "subscribe", @, options
+

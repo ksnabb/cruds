@@ -248,10 +248,10 @@ for this one to work for now.
 
                             if req.method is "POST"
                                 @create doc, (err, doc) ->
-                                    res.json 201, doc
+                                    res.json 201, _.extend doc, files #TODO concurrency
                             else if req.method is "PUT"
                                 @update req.params.id, doc, (err, doc) ->
-                                    res.json 200, {}
+                                    res.json 200, files
 
                     else if req.method is "POST"
                         @create req.body, (err, doc) ->
@@ -296,9 +296,6 @@ peers - return a list of clients subscribed to a certain channel TODO
 
                 ws.on "close", ((ws) ->
                     for channel in ws.channels
-                        console.log "unsubscribe"
-                        console.log channel
-                        console.log ws.id
                         @unsubscribe ws, channel.substr(2)
                 ).bind @, ws
 
@@ -362,12 +359,7 @@ reponse so the client knows which request is responded to.
                         ws.send JSON.stringify response
 
                     else if message.method is "broadcast"
-                        console.log "broadcast"
-                        console.log message
                         for socket in @subscriptions["c-#{message.channel}"]
-                            console.log "send to socket"
-                            console.log socket.id
-                            console.log @subscriptions
                             socket.send JSON.stringify {data: message.data, channel: message.channel}
                     else
                         response = {

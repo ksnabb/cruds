@@ -104,6 +104,20 @@ LocalStorage
                                     model.create data.data
                             ).bind @
 
+            else if method is "upload"
+
+                formdata = new FormData()
+                formdata.append "file", options.file, options.fileName
+
+                oReq = new XMLHttpRequest()
+                oReq.onload = ->
+                    response = JSON.parse @responseText
+                    model.set {"file": response.file}
+
+                oReq.open("PUT", "#{url}/#{model.id}")
+                oReq.send formdata
+
+                #Backbone.ajaxSync method, model, options
             else 
                 Backbone.ajaxSync method, model, options
 
@@ -113,4 +127,7 @@ Other Backbone overrides that should be moved elsewhere maybe?
 
     Backbone.Collection.prototype.subscribe = (options) ->
         @sync "subscribe", @, options
+
+    Backbone.Model.prototype.upload = (options) ->
+        @sync "upload", @, options
 

@@ -58,8 +58,6 @@ describe 'CRUDS',  ->
 
         it 'should be able to handle empty file fields', (done) ->
 
-            file = new Blob(["this is a plain text file"], {type: "text/plain"})
-
             # create a form
             form = document.createElement "form"
             form.action = "/entity"

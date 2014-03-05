@@ -9,6 +9,7 @@ wsMessage = (message, answer) ->
     ws.send JSON.stringify message
 
 describe 'CRUDS',  ->
+    @timeout(20000)
 
     before (done) ->
         ws = new WebSocket "ws://#{window.location.host}/entity"
@@ -39,7 +40,7 @@ describe 'CRUDS',  ->
             oReq = new XMLHttpRequest()
             oReq.onload = ->
                 response = JSON.parse this.responseText
-                response.should.have.keys('_id')
+                response.should.have.keys('_id', 'name-of-file-field')
                 fileId = response._id
 
                 # get the created doc
@@ -225,7 +226,6 @@ describe 'CRUDS',  ->
                 obj = JSON.parse(evt.data).data
 
                 wsMessage {method: 'update', id: obj[0]._id, doc: {$set: {updated: true}}}, (evt) ->
-                    console.log evt.data
                     evt.data.should.eql '{"ts":0}'
                     done()
 

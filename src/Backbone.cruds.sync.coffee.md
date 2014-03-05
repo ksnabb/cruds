@@ -71,12 +71,12 @@ LocalStorage
                         wsMessage(wsConnection, {method: "create", doc: model.attributes})
                     .then (msg) ->
                         model.set msg
+                        model.trigger "sync", model, msg, options
 
                         if options.broadcast
                             connect()
                                 .then (wsConnection) ->
                                     wsMessage wsConnection, {method: "broadcast", data: model.attributes, channel: url}
-
 
             else if method is "read"
                 connect()
@@ -84,7 +84,7 @@ LocalStorage
                         wsMessage(wsConnection, {method: "read"})
                     .then (msg) ->
                         model.set msg
-                        model.trigger "sync", msg, options
+                        model.trigger "sync", model, msg, options
                         subscribe model
 
             else if method is "subscribe"
@@ -112,12 +112,14 @@ LocalStorage
                 oReq = new XMLHttpRequest()
                 oReq.onload = ->
                     response = JSON.parse @responseText
-                    model.set {"file": response.file}
+                    model.set {"file": response.file}                    
+                    model.trigger "sync", model, response, options
 
                 oReq.open("PUT", "#{url}/#{model.id}")
                 oReq.send formdata
 
-                #Backbone.ajaxSync method, model, options
+Backbone.ajaxSync method, model, options
+
             else 
                 Backbone.ajaxSync method, model, options
 

@@ -35,18 +35,26 @@ module.exports = (grunt) ->
 
     shell:
       server:
-        command: 'PORT=3000 node ./test/express.js'
+        command: 'PORT=9997 node ./test/express.js'
         options:
           async: true
       cpsync:
         command: 'cp lib/Backbone.cruds.sync.js test/browser/js/Backbone.cruds.sync.js'
   
-    mocha_phantomjs:
-      test:
+    'saucelabs-mocha': # this is still not updated to version 4 that would support websockets
+      all:
         options:
-          reported: "list"
-          output: 'test.out'
-          urls: ['http://localhost:3000/test.html']
+          urls: ["http://localhost:9997/test.html"]
+          tunnelTimeout: 5,
+          build: process.env.TRAVIS_JOB_ID,
+          concurrency: 3,
+          browsers: [{
+            browserName: "chrome"
+            platform: "OS X 10.9"
+            version: "31"
+          }],
+          testname: "mocha tests",
+          tags: ["develop"]
 
     watch:
       cruds: 
@@ -69,8 +77,13 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-mocha-test'
   grunt.loadNpmTasks 'grunt-shell-spawn'
-  grunt.loadNpmTasks 'grunt-mocha-phantomjs'
+  grunt.loadNpmTasks 'saucelabs-mocha'
   grunt.loadNpmTasks 'grunt-contrib-watch'
+
+  for key of grunt.file.readJSON("package.json").devDependencies
+    if key isnt "grunt" and key.indexOf("grunt") is 0
+      grunt.loadNpmTasks(key)
+  
   grunt.registerTask 'drop-mongodb', 'drop the database', ->
     mongoose = require "mongoose"
     done = @async()
@@ -80,5 +93,7 @@ module.exports = (grunt) ->
           done()
 
 
-  grunt.registerTask 'test', ['coffee:build', 'coffee:buildSync', 'coffee:test', 'shell:cpsync', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'mocha_phantomjs', 'shell:server:kill']
+  grunt.registerTask 'test', ['coffee:build', 'coffee:buildSync', 'coffee:test', 'shell:cpsync', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'saucelabs-mocha', 'shell:server:kill']
   grunt.registerTask 'default', ['coffee:build', 'coffee:test']
+  grunt.registerTask 'dist', ['coffee:build']
+

@@ -7,3 +7,7 @@ branches:
   only:
     - master
     - develop
+env:
+  global:
+  - secure: r32dONrFuSZrAfRwwWYjBcWmyjBq0+IUYrxLxT3lrn46bokx4LZqLAhJDaPW67ybB7ldZgbozfl2EmsSdvUl8po87nrzsDmZsB/LaPabKqyTlqIXIMSYA8eoFx5+2JcNKQqGwD7JjxCyBU2cpy7gXh1VddrvDzjmr6DNgAYQ1io=
+  - secure: bOPAGYVIMr7hsgrR+fdOQFTzIw49zHjv+1iRImJVjzpUHF12Sno1GZ9P8jJN2CFtAxQqRWghE5OI3TRX3iYv0DLarbKAWiIpZ+E57h53jZ0/V70Xjny0yXbzP3jT7e6I1K2K4u3lkXgzHB7Ol1eBpBzQIXmnStzNOZZhxNPg05k=

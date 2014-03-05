@@ -234,6 +234,7 @@ for this one to work for now.
                     isMultipart = contentType.search("multipart/form-data") > -1
 
                     if isMultipart
+                        
                         form = new gridform()
 
                         onPart = (gridPart, part) ->
@@ -242,7 +243,7 @@ for this one to work for now.
 
                         nativePart = form.onPart
                         form.onPart = onPart.bind form, nativePart
-                        
+
                         form.parse req, (err, fields, files) =>
                             doc = _.extend fields, files
 
@@ -264,6 +265,7 @@ for this one to work for now.
                     else
                         res.json {message: "request method #{req.method} not supported"}
 
+File route handles reading of files.
 
             fileRoute: (req, res) ->
                 id = req.params.id

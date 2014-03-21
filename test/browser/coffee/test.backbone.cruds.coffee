@@ -21,7 +21,7 @@ iframe = document.createElement "iframe"
 iframe.src = "iframe.html"
 port = null
 
-describe "Sync", ->
+describe "Backbone.Sync for CRUDS", ->
 
     before (done) ->
         # Check that the iframe has loaded and responds to messages
@@ -51,6 +51,11 @@ describe "Sync", ->
         }, {broadcast: true}
         sayfred.on 'change', (evt) ->
             sayfred_id = evt.changed._id
+
+
+    it "should be able to delete a model and other clients should receive updates"
+
+    it "should be able to update a model and other cliencts should receive updates"
 
     it "should create new entities with files", (done) ->
         ###

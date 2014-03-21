@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="vendor/mocha.css" />
+    </head>
+    <body>
+        <div id="mocha"></div>
+        <script src="vendor/jquery-2.0.3.min.js"></script>
+        <script src="vendor/underscore-min.js"></script>
+        <script src="vendor/backbone-min.js"></script>
+        <script src="vendor/promise-0.1.1.min.js"></script>
+        <script src="js/Backbone.cruds.sync.js"></script>
+        <script>
+
+// sync method to use
+sync = Backbone.getSyncMethod('/entity');
+
+// Backbone model and collection to use
+var Model = Backbone.Model.extend({
+    sync: sync,
+    idAttribute: "_id"});
+
+var Collection = Backbone.Collection.extend( {
+    model: Model,
+    url: "/entity",
+    sync: sync
+});
+var collection = new Collection()
+
+// send initial message to parent so that the tests can begin
+var channel = new MessageChannel();
+parent.postMessage("hello", window.location.origin, [channel.port2]);
+
+port = channel.port1;
+
+// send events from collection straight to the other client
+collection.on("add", function(model, collection, options) {
+    port.postMessage(model.attributes);
+});
+collection.on("sync", function(model, error, options) {
+    port.postMessage("sync");
+});
+
+// initial fetch
+collection.subscribe() // receive events from other clients
+collection.fetch()
+
+        </script>
+    </body>
+</html>

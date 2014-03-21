@@ -262,11 +262,4 @@ describe 'CRUDS',  ->
                     evt.data.should.not.include "channel-13"
                     done()
 
-    describe 'subscribe with long poll', ->
-
-        it 'should respond when there is an update'
-
-    describe 'subscribe with SSE', ->
-
-        it 'should respond when there is an update'
-
+                    

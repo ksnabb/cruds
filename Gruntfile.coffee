@@ -23,6 +23,7 @@ module.exports = (grunt) ->
           'test/browser/js/test.raw.js': 'test/browser/coffee/test.raw.coffee'
           'test/browser/js/test.backbone.cruds.js': 'test/browser/coffee/test.backbone.cruds.coffee'
           'test/express.js': 'test/express.coffee'
+          'test/browser/js/Backbone.cruds.sync.js': 'src/Backbone.cruds.sync.coffee.md'
 
     mochaTest:
       test:
@@ -34,27 +35,8 @@ module.exports = (grunt) ->
         src: ['test/server/*.coffee']
 
     shell:
-      server:
-        command: 'PORT=9997 node ./test/express.js'
-        options:
-          async: true
       cpsync:
         command: 'cp lib/Backbone.cruds.sync.js test/browser/js/Backbone.cruds.sync.js'
-  
-    'saucelabs-mocha': # this is still not updated to version 4 that would support websockets
-      all:
-        options:
-          urls: ["http://localhost:9997/test.html"]
-          tunnelTimeout: 5,
-          build: process.env.TRAVIS_JOB_ID,
-          concurrency: 3,
-          browsers: [{
-            browserName: "chrome"
-            platform: "OS X 10.9"
-            version: "31"
-          }],
-          testname: "mocha tests",
-          tags: ["develop"]
 
     watch:
       cruds: 
@@ -93,7 +75,7 @@ module.exports = (grunt) ->
           done()
 
 
-  grunt.registerTask 'test', ['coffee:build', 'coffee:buildSync', 'coffee:test', 'shell:cpsync', 'drop-mongodb', 'mochaTest', 'shell:server', 'drop-mongodb', 'saucelabs-mocha', 'shell:server:kill']
+  grunt.registerTask 'test', ['coffee:build', 'coffee:buildSync', 'coffee:test', 'shell:cpsync', 'drop-mongodb', 'mochaTest']
   grunt.registerTask 'default', ['coffee:build', 'coffee:test']
   grunt.registerTask 'dist', ['coffee:build']
 

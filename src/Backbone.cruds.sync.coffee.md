@@ -26,8 +26,10 @@ LocalStorage
         listeners = []
 
         connect = ->
+
             return new Promise (resolve, reject) ->
-                unless wsConnection
+                
+                unless wsConnection?
                     wsConnection = new WebSocket "ws://#{window.location.host}#{url}"
                     wsConnection.onopen = ->
                         resolve wsConnection
@@ -40,7 +42,7 @@ LocalStorage
                                 newListeners.push listener
                         listeners = newListeners
 
-                else if wsConnection.readyState isnt 1
+                else if wsConnection? and wsConnection.readyState isnt 1
                     oldopen = wsConnection.onopen;
                     wsConnection.onopen = ->
                         oldopen()

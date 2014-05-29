@@ -75,6 +75,7 @@ The *create* function will create a new document for the passed in document. The
 values that has changed during the creation of the document as parameters.
 
 - **doc** {Object}, The mongodb document to be created
+- **[channel]** {String}, A channel that the creation will be broadcasted to
 - **[callback]** {function}, Optional callback function that will get two params err and the changed key value pairs
 
             create: (doc, args...)->
